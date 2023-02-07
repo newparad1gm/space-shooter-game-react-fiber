@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
@@ -16,19 +16,14 @@ type GLTFResult = GLTF & {
 	}
 }
 
-interface SpaceshipProps {
-	model: React.RefObject<THREE.Group>;
-}
-
 export const Spaceship = () => {
-	//const { model } = props;
 	const { nodes, materials } = useGLTF('/gltf/spaceship.gltf') as GLTFResult;
 
 	return (
-		<group dispose={null} >
-			<mesh geometry={nodes['buffer-0-mesh-0001'].geometry} material={materials['lambert4SG.001']} />
-			<mesh geometry={nodes['buffer-0-mesh-0001_1'].geometry} material={materials['lambert3SG.001']} />
-			<mesh geometry={nodes['buffer-0-mesh-0001_2'].geometry} material={materials['lambert2SG.001']} />
+		<group >
+			<mesh geometry={nodes['buffer-0-mesh-0001'].geometry} material={materials['lambert4SG.001']} material-roughness={1} material-metalness={0.25} />
+			<mesh geometry={nodes['buffer-0-mesh-0001_1'].geometry} material={materials['lambert3SG.001']} material-roughness={1} material-metalness={0.25} />
+			<mesh geometry={nodes['buffer-0-mesh-0001_2'].geometry} material={materials['lambert2SG.001']} material-roughness={1} material-metalness={0.25} />
 		</group>
 	);
 }

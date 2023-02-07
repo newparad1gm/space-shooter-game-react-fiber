@@ -44,7 +44,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         if (rocks.current) {
             engine.rockGroup = rocks.current;
         }
-    }, [rocks]);
+    }, [engine, rocks]);
 
     useEffect(() => {
         if (engine.rocks.length === 0) {
@@ -55,7 +55,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             const testRock1 = {"id":"d3855500-a382-11ed-82d5-4d6ddf1848cb","activity":{"name":"TT1A3 Create duck","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"time":1530457210538,"workflow":"63dc9a2afe01992a5aa4adb9"};
             engine.addRock(testRock1);
         }
-    }, [engine.rocks]);
+    }, [engine]);
 
     useFrame(() => {
         if (cameraGroup.current) {

@@ -10,6 +10,7 @@ export class Network {
 
     constructor(engine: Engine) {
         this.engine = engine;
+        engine.network = this;
     }
 
     setupClient = (setGameStarted: React.Dispatch<React.SetStateAction<boolean>>) => {
@@ -39,5 +40,11 @@ export class Network {
                 }
             };
         }
+    }
+
+    sendRock = (guid: string) => {
+        this.client && this.client.send(JSON.stringify({
+            id: guid
+        }));
     }
 }

@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { RootState, useFrame } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Spaceship } from '../objects/Spaceship';
 import { Utils } from '../Utils';
-import { OrbitControls, PointerLockControls } from '@react-three/drei';
 
 interface ShipProps {
 	engine: Engine;
@@ -26,20 +25,37 @@ export const Ship = (props: ShipProps) => {
 
     const keyStates: Set<string> = useMemo(() => new Set(), []);
 
+    const setThirdPersonCamera = useCallback((ship: THREE.Group, cameraOrigin: THREE.Vector3, movementX: number, movementY: number) => {
+        const offset = new THREE.Spherical().setFromVector3(
+            engine.camera.position.clone().sub(cameraOrigin)
+        );
+        const phi = offset.phi - movementY * 0.02;
+        offset.theta -= movementX * 0.02;
+        offset.phi = Math.max(0.5, Math.min(0.9 * Math.PI, phi));
+        engine.camera.position.copy(
+            cameraOrigin.clone().add(new THREE.Vector3().setFromSpherical(offset))
+        );
+        engine.camera.lookAt(ship.position.clone().add(cameraOrigin));
+    }, [engine.camera]);
+
     useEffect(() => {
         if (ship.current) {
+            ship.current.add(engine.camera);
+
             document.addEventListener('keydown', event => {
                 keyStates.add(event.code);
             });
             document.addEventListener('keyup', event => {
                 keyStates.delete(event.code);
             });
-            ship.current.add(engine.camera);
-            
+            document.addEventListener('mouseup', () => {
+                if (document.pointerLockElement !== null) {
+                    engine.shoot();
+                }
+            });
             document.body.addEventListener('mousedown', () => {
                 document.body.requestPointerLock();
             });
-
             document.body.addEventListener('mousemove', (event: MouseEvent) => {
                 if (document.pointerLockElement === document.body && ship.current) {
                     const { movementX, movementY } = event;
@@ -56,20 +72,7 @@ export const Ship = (props: ShipProps) => {
                 }
             });
         }
-    }, [engine, ship]);
-
-    const setThirdPersonCamera = (ship: THREE.Group, cameraOrigin: THREE.Vector3, movementX: number, movementY: number) => {
-        const offset = new THREE.Spherical().setFromVector3(
-            engine.camera.position.clone().sub(cameraOrigin)
-        );
-        const phi = offset.phi - movementY * 0.02;
-        offset.theta -= movementX * 0.02;
-        offset.phi = Math.max(0.5, Math.min(0.9 * Math.PI, phi));
-        engine.camera.position.copy(
-            cameraOrigin.clone().add(new THREE.Vector3().setFromSpherical(offset))
-        );
-        engine.camera.lookAt(ship.position.clone().add(cameraOrigin));
-    }
+    }, [cameraOrigin, engine, keyStates, ship, setThirdPersonCamera]);
 
     useEffect(() => {
         if (engine.firstPerson && ship.current) {
@@ -84,9 +87,9 @@ export const Ship = (props: ShipProps) => {
             engine.camera.position.copy(position);
             engine.camera.rotation.order = 'XYZ';
         }
-    }, [engine.firstPerson, ship, model]);
+    }, [engine.camera, engine.firstPerson, frontPosition, model, ship]);
 
-    const controls = (delta: number) => {
+    const controls = useCallback((delta: number) => {
         const speedDelta = delta * 8;
         if (keyStates.has('KeyW')) {
             velocity.add(Utils.getForwardVector(engine.camera, tempDirection).multiplyScalar(speedDelta));
@@ -104,17 +107,17 @@ export const Ship = (props: ShipProps) => {
             keyStates.delete('KeyT');
             engine.setFirstPerson && engine.setFirstPerson(!engine.firstPerson);
         }
-    }
+    }, [engine, keyStates, tempDirection, velocity]);
 
-    const speed = () => {
+    const speed = useCallback(() => {
         return Math.sqrt(velocity.dot(velocity));
-    }
+    }, [velocity]);
 
-    const rotateQuat = (model: THREE.Group) => {
+    const rotateQuat = useCallback((model: THREE.Group) => {
         model.quaternion.slerp(engine.camera.quaternion, 0.1);
-    }
+    }, [engine.camera]);
 
-    const calculatePosition = (delta: number, group: THREE.Group) => {
+    const calculatePosition = useCallback((delta: number, group: THREE.Group) => {
         let damping = Math.exp(-4 * delta) - 1;
         damping *= 0.1;
         velocity.addScaledVector(velocity, damping);
@@ -123,7 +126,7 @@ export const Ship = (props: ShipProps) => {
         if (!engine.firstPerson) {
             engine.camera.lookAt(group.position.clone().add(cameraOrigin));
         }
-    }
+    }, [cameraOrigin, engine.camera, engine.firstPerson, velocity]);
 
     useFrame((state: RootState, delta: number) => {
 		controls(delta);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Explosion, JsonResponse, Rock } from '../Types';
+import { Network } from './Network';
 
 export class Engine {
     camera: THREE.PerspectiveCamera;
@@ -25,6 +26,8 @@ export class Engine {
     firstPerson: boolean;
     setFirstPerson?: React.Dispatch<React.SetStateAction<boolean>>;
 
+    network: Network;
+
     constructor() {
         this.camera = new THREE.PerspectiveCamera();
         this.scene = new THREE.Scene();
@@ -38,6 +41,7 @@ export class Engine {
 
         this.firstPerson = false;
         this.raycaster = new THREE.Raycaster();
+        this.network = new Network(this);
     }
 
     setRay = () => {
@@ -94,5 +98,9 @@ export class Engine {
         this.idToRock.set(rock.guid, rock);
         this.setRocks && this.setRocks([...this.rocks, rock]);
         this.rockCount += 1;
+    }
+
+    shoot = () => {
+        this.currentRock && this.network?.sendRock(this.currentRock.guid);
     }
 }

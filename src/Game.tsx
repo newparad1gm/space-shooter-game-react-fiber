@@ -1,19 +1,18 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { Ship } from './player/Ship';
 import { Engine } from './game/Engine';
 import { Crosshair } from './objects/Crosshair';
 import { WorldLoader } from './world/WorldLoader';
 import { Hud, GameStartOptions } from './options/GameOptions';
 import { WorldName } from './world/WorldLoader';
-import { Network } from './game/Network';
 import './Game.css';
 
 export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
-    const network = useMemo(() => new Network(engine), []);
-    [ network.client, network.setClient ] = useState<WebSocket>();
+    [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
     const [ gameStarted, setGameStarted ] = useState<boolean>(true);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
 
@@ -32,9 +31,12 @@ export const Game = (): JSX.Element => {
                 <Crosshair engine={engine} />
                 <WorldLoader engine={engine} worldName={worldName} />
                 <Ship engine={engine} />
+                <EffectComposer>
+                    <Bloom luminanceThreshold={1} luminanceSmoothing={0.9} height={300} />
+                </EffectComposer>
             </Canvas> }
             { gameStarted && <Hud engine={engine} /> }
-            { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} setGameStarted={setGameStarted} network={network} /> }
+            { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} setGameStarted={setGameStarted} network={engine.network} /> }
         </div>
     )
 }

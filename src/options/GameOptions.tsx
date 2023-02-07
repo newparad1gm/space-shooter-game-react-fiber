@@ -39,20 +39,20 @@ interface GameStartOptionsProps {
 export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
     const { worldName, setWorldName, setGameStarted, network } = props;
     const webSocketUrl = useRef<HTMLInputElement>(null);
-    const timeoutRef = useRef<HTMLInputElement>(null);
+    const timeout = useRef<HTMLInputElement>(null);
 
     const startGame = useCallback(() => {
-        if (webSocketUrl.current && timeoutRef.current && webSocketUrl.current.value) {
-            network.timeout = parseInt(timeoutRef.current.value) || 20;
+        if (webSocketUrl.current && timeout.current && webSocketUrl.current.value) {
+            network.timeout = parseInt(timeout.current.value) || 20;
             network.setClient && network.setClient(new WebSocket(webSocketUrl.current.value));
         }
-    }, [webSocketUrl, timeoutRef, network]);
+    }, [network, timeout, webSocketUrl]);
 
     useEffect(() => {
         if (network.client) {
             network.setupClient(setGameStarted);
         }
-    }, [network.client]);
+    }, [network, setGameStarted]);
 
     return (
         <div>
@@ -65,7 +65,7 @@ export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
                 )) }
             </select>
             <div>WebSocket: <input type='text' ref={webSocketUrl} defaultValue={process.env.REACT_APP_WEBSOCKET_CONNECTION || window.location.origin.replace(/^http/, 'ws')} /></div>
-            <div>Timeout (in seconds): <input type='number' min='5' max='60' ref={timeoutRef} defaultValue={20} /></div>
+            <div>Timeout (in seconds): <input type='number' min='5' max='60' ref={timeout} defaultValue={20} /></div>
             <button onClick={startGame}>
                 Click to start
             </button>

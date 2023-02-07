@@ -72,7 +72,7 @@ export const Rock = (props: RockProps) => {
             rock.mesh = mesh.current;
             meshIdToRockId.set(mesh.current.uuid, rock.guid);
         }
-    }, [mesh]);
+    }, [mesh, meshIdToRockId, rock]);
 
 	return (
 		<group position={rock.position}>
