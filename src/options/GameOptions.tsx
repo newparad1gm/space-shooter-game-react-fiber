@@ -52,7 +52,7 @@ export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
         if (network.client) {
             network.setupClient(setGameStarted);
         }
-    }, [network, setGameStarted]);
+    }, [network, network.client, setGameStarted]);
 
     return (
         <div>

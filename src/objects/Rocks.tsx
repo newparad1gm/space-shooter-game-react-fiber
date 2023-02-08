@@ -49,7 +49,7 @@ export const Rock = (props: RockProps) => {
     const scale = useMemo(() => new THREE.Vector3(randomScale(), randomScale(), randomScale()), []);
     const textMaterial = useMemo(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = 1000;
+        canvas.width = 2000;
         canvas.height = 50;
         const ctx = canvas.getContext('2d');
         if (ctx) {
@@ -74,9 +74,28 @@ export const Rock = (props: RockProps) => {
         }
     }, [mesh, meshIdToRockId, rock]);
 
+    /*useEffect(() => {
+        if (mesh.current) {
+            const positionAttribute = mesh.current.geometry.getAttribute('position');
+            if (positionAttribute instanceof THREE.BufferAttribute || positionAttribute instanceof THREE.InterleavedBufferAttribute) {
+                for (var vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++)
+                {       
+                    const localVertex = new THREE.Vector3().fromBufferAttribute(positionAttribute, vertexIndex).clone();
+                    const globalVertex = localVertex.applyMatrix4(mesh.current.matrix);
+                    const directionVector = globalVertex.sub(mesh.current.position);
+                
+                    rock.rays.push({ 
+                        ray: new THREE.Raycaster(mesh.current.getWorldPosition(new THREE.Vector3()), directionVector.clone().normalize()), 
+                        vector: directionVector 
+                    });
+                }
+            }
+        }
+    }, [mesh]);*/
+
 	return (
 		<group position={rock.position}>
-			<sprite position={[0, (scale.y / 2) + 2, 0]} material={textMaterial} scale={[30, 3, 1]} />
+			<sprite position={[0, (scale.y / 2) + 2, 0]} material={textMaterial} scale={[80, 3, 1]} />
             <mesh ref={mesh} geometry={geometry} material={material} material-roughness={1} material-metalness={0.5} layers={1} scale={scale} />
 		</group>
 	)

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Explosion, JsonResponse, Rock } from '../Types';
+import { Explosion, JsonResponse, Laser, Rock } from '../Types';
 import { Network } from './Network';
 
 export class Engine {
@@ -8,6 +8,11 @@ export class Engine {
     renderer: THREE.WebGLRenderer;
 
     raycaster: THREE.Raycaster;
+
+    lasers: Laser[];
+    setLasers?: React.Dispatch<React.SetStateAction<Laser[]>>;
+    laserTimeout: NodeJS.Timeout | undefined;
+    laserCount: number = 0;
 
     explosions: Explosion[];
     setExplosions?: React.Dispatch<React.SetStateAction<Explosion[]>>;
@@ -33,6 +38,7 @@ export class Engine {
         this.scene = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer();
 
+        this.lasers = [];
         this.explosions = [];
         this.rocks = [];
         this.idToRock = new Map();
@@ -82,7 +88,7 @@ export class Engine {
     addExplosion = (position: THREE.Vector3, object: THREE.Object3D) => {
         if (this.setExplosions) {
             const now = Date.now();
-            this.setExplosions([...this.explosions, { guid: object.id, position: position, scale: 1, time: now }]);
+            this.setExplosions([...this.explosions, { guid: object.uuid, position: position, scale: 1, time: now }]);
             clearTimeout(this.explosionTimeout);
             this.explosionTimeout = setTimeout(() => this.setExplosions!(this.explosions.filter(({ time }) => Date.now() - time <= 1000)), 1000);
         }
@@ -100,7 +106,16 @@ export class Engine {
         this.rockCount += 1;
     }
 
-    shoot = () => {
-        this.currentRock && this.network?.sendRock(this.currentRock.guid);
+    shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
+        this.setLasers && this.setLasers([...this.lasers, { 
+            guid: (this.laserCount++).toString(), 
+            time: Date.now(), 
+            position: position, 
+            direction: direction, 
+            quaternion: quaternion,
+            raycaster: new THREE.Raycaster(position, direction.clone().negate())
+        }]);
+        clearTimeout(this.laserTimeout);
+        this.laserTimeout = setTimeout(() => this.setLasers!(this.lasers.filter(({ time }) => Date.now() - time <= 1000)), 1000);
     }
 }

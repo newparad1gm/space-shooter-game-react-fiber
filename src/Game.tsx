@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import * as THREE from 'three';
+import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { Ship } from './player/Ship';
@@ -13,7 +14,7 @@ import './Game.css';
 export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
     [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
-    const [ gameStarted, setGameStarted ] = useState<boolean>(true);
+    const [ gameStarted, setGameStarted ] = useState<boolean>(false);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
 
     return (
@@ -34,6 +35,7 @@ export const Game = (): JSX.Element => {
                 <EffectComposer>
                     <Bloom luminanceThreshold={1} luminanceSmoothing={0.9} height={300} />
                 </EffectComposer>
+                <Stats />
             </Canvas> }
             { gameStarted && <Hud engine={engine} /> }
             { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} setGameStarted={setGameStarted} network={engine.network} /> }

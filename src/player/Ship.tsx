@@ -19,13 +19,13 @@ export const Ship = (props: ShipProps) => {
     const cameraOrigin: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 3.0, 0), []);
     const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
-    const modelQuaternion: THREE.Quaternion = useMemo(() => new THREE.Quaternion(), []);
     const velocity: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const tempDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
 
     const keyStates: Set<string> = useMemo(() => new Set(), []);
 
     const setThirdPersonCamera = useCallback((ship: THREE.Group, cameraOrigin: THREE.Vector3, movementX: number, movementY: number) => {
+        // third person camera based on sphere around the camera origin, camera will always look at origin
         const offset = new THREE.Spherical().setFromVector3(
             engine.camera.position.clone().sub(cameraOrigin)
         );
@@ -49,8 +49,16 @@ export const Ship = (props: ShipProps) => {
                 keyStates.delete(event.code);
             });
             document.addEventListener('mouseup', () => {
-                if (document.pointerLockElement !== null) {
-                    engine.shoot();
+                // fire based on camera or ship direction whether first or third person
+                if (document.pointerLockElement !== null && ship.current) {
+                    let object: THREE.Object3D = engine.camera;
+                    let direction = object.getWorldDirection(new THREE.Vector3());
+                    direction = direction.negate();
+                    if (!engine.firstPerson && model.current) {
+                        object = model.current;
+                        direction = object.getWorldDirection(direction);
+                    }
+                    engine.shoot(ship.current.getWorldPosition(new THREE.Vector3()), direction, object.getWorldQuaternion(new THREE.Quaternion()));
                 }
             });
             document.body.addEventListener('mousedown', () => {
@@ -64,7 +72,6 @@ export const Ship = (props: ShipProps) => {
                     } else {
                         engine.camera.rotation.y -= movementX / 500;
                         const verticalLook = engine.camera.rotation.x - (movementY / 500);
-                        console.log(verticalLook);
                         if (verticalLook < 1.5 && verticalLook > -1.5) {
                             engine.camera.rotation.x = verticalLook;
                         }
@@ -90,18 +97,23 @@ export const Ship = (props: ShipProps) => {
     }, [engine.camera, engine.firstPerson, frontPosition, model, ship]);
 
     const controls = useCallback((delta: number) => {
-        const speedDelta = delta * 8;
+        let speedDelta = delta * 8;
+        let object: THREE.Object3D = engine.camera;
+        if (!engine.firstPerson && model.current) {
+            object = model.current;
+            speedDelta = -speedDelta;
+        }
         if (keyStates.has('KeyW')) {
-            velocity.add(Utils.getForwardVector(engine.camera, tempDirection).multiplyScalar(speedDelta));
+            velocity.add(Utils.getForwardVector(object, tempDirection).multiplyScalar(speedDelta));
         }
         if (keyStates.has('KeyS')) {
-            velocity.add(Utils.getForwardVector(engine.camera, tempDirection).multiplyScalar(-speedDelta));
+            velocity.add(Utils.getForwardVector(object, tempDirection).multiplyScalar(-speedDelta));
         }
         if (keyStates.has('KeyA')) {
-            velocity.add(Utils.getSideVector(engine.camera, tempDirection).multiplyScalar(-speedDelta));
+            velocity.add(Utils.getSideVector(object, tempDirection).multiplyScalar(-speedDelta));
         }
         if (keyStates.has('KeyD')) {
-            velocity.add(Utils.getSideVector(engine.camera, tempDirection).multiplyScalar(speedDelta));
+            velocity.add(Utils.getSideVector(object, tempDirection).multiplyScalar(speedDelta));
         }
         if (keyStates.has('KeyT')) {
             keyStates.delete('KeyT');
@@ -114,6 +126,7 @@ export const Ship = (props: ShipProps) => {
     }, [velocity]);
 
     const rotateQuat = useCallback((model: THREE.Group) => {
+        // rotate model position towards camera direction in third person
         model.quaternion.slerp(engine.camera.quaternion, 0.1);
     }, [engine.camera]);
 
@@ -137,7 +150,6 @@ export const Ship = (props: ShipProps) => {
             model.current && rotateQuat(model.current);
             ship.current && calculatePosition(delta, ship.current)
         }
-        model.current && modelQuaternion.copy(model.current.quaternion);
     });
 
 	return (
