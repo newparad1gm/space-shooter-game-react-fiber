@@ -47,6 +47,8 @@ export class Network {
                     this.transitionStage(messageData.stage);
                 } else if (messageData.stageEntered) {
                     this.engine.destroyRing(messageData.stageEntered.id);
+                } else if (messageData.requirementsFulfilled) {
+                    this.fulfillRequirements(messageData.requirementsFulfilled);
                 }
             };
         }
@@ -57,8 +59,8 @@ export class Network {
             if (!this.workflows.has(workflow.id)) {
                 this.workflows.set(workflow.id, {
                     name: workflow.name,
-                    id: workflow.id,
                     activities: [],
+                    requirements: []
                 });
             }
             return this.workflows.get(workflow.id);
@@ -69,11 +71,9 @@ export class Network {
         if (activity.workflow) {
             const workflow = this.getWorkflow(activity.workflow);
             if (workflow) {
-                workflow.activities.push({
-                    name: activity.activity.name,
-                    id: activity.activityId,
-                    executionTime: new Date(activity.time)
-                });
+                workflow.activities.push(
+                    activity.activity.name
+                );
                 this.engine.setWorkflows && this.engine.setWorkflows(Array.from(this.workflows.values()));
             }
         }
@@ -85,9 +85,20 @@ export class Network {
             if (workflow) {
                 workflow.currentStage = {
                     name: stage.stage.name,
-                    id: stage.stageId,
                     enteredTime: new Date(stage.time)
                 };
+                this.engine.setWorkflows && this.engine.setWorkflows(Array.from(this.workflows.values()));
+            }
+        }
+    }
+
+    fulfillRequirements = (requirements: JsonResponse) => {
+        if (requirements.workflow) {
+            const workflow = this.getWorkflow(requirements.workflow);
+            if (workflow) {
+                workflow.requirements.push(
+                    ...requirements.requirements
+                );
                 this.engine.setWorkflows && this.engine.setWorkflows(Array.from(this.workflows.values()));
             }
         }

@@ -12,7 +12,7 @@ export const Lasers = (props: LasersProps) => {
     const { lasers, group } = props;
 
     const laserGeometry: THREE.BoxGeometry = useMemo(() => new THREE.BoxGeometry(0.10, 0.10, 20), []);
-    const laserColor: THREE.Color = useMemo(() => new THREE.Color('lightgreen'), []);
+    const laserColor: THREE.Color = useMemo(() => new THREE.Color('red'), []);
     const laserMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: laserColor, toneMapped: false }), [laserColor]);
 
     return (

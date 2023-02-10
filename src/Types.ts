@@ -30,20 +30,18 @@ export type Laser = {
 
 export type Workflow = {
     name: string;
-    id: string;
-    activities: Activity[];
+    activities: string[];
+    requirements: string[];
     currentStage?: Stage;
 }
 
 export type Activity = {
     name: string;
-    id: string;
     executionTime: Date;
 }
 
 export type Stage = {
     name: string;
-    id: string;
     enteredTime: Date;
 }
 
