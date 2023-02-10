@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { WorldName } from '../world/WorldLoader';
 import { Utils } from '../Utils';
 import { Engine } from '../game/Engine';
-import { Rock } from '../Types';
+import { SpaceObject, Workflow } from '../Types';
 import { Network } from '../game/Network';
 
 interface HudProps {
@@ -11,19 +11,37 @@ interface HudProps {
 
 export const Hud = (props: HudProps): JSX.Element => {
     const { engine } = props;
-    [ engine.currentRock, engine.setCurrentRock ] = useState<Rock>();
-    const preRef = useRef<HTMLPreElement>(null);
+    [ engine.currentRock, engine.setCurrentRock ] = useState<SpaceObject>();
+    [ engine.workflows, engine.setWorkflows ] = useState<Workflow[]>([]);
+    const workflowsPre = useRef<HTMLPreElement>(null);
+    const rockPre = useRef<HTMLPreElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (preRef.current) {
-            preRef.current.innerHTML = engine.currentRock ? JSON.stringify(engine.currentRock.data, undefined, 2) : '';
+        if (rockPre.current) {
+            rockPre.current.innerHTML = engine.currentRock ? JSON.stringify(engine.currentRock.data, undefined, 2) : '';
         }
-    }, [preRef, engine.currentRock])
+    }, [rockPre, engine.currentRock]);
+
+    useEffect(() => {
+        if (workflowsPre.current) {
+            workflowsPre.current.innerHTML = engine.workflows ? JSON.stringify(engine.workflows, undefined, 2) : '';
+        }
+        bottomRef.current && bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }, [workflowsPre, engine.workflows]);
 
     return (
         <div id='hud'>
-            <div id='rockData' >
-                <pre ref={preRef}/>
+            <div className={'hudData workflowData'}>
+                Workflows:
+                <div>
+                    <pre ref={workflowsPre} />
+                </div>
+                <div ref={bottomRef} />
+            </div>
+            <div className='hudData'>
+                Activity:
+                <pre ref={rockPre} />
             </div>
         </div>
     )

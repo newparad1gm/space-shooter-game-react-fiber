@@ -4,8 +4,9 @@ import { useLoader, useFrame } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Lasers } from '../objects/Lasers';
 import { Explosions } from '../objects/Explosions';
+import { Rings } from '../objects/Rings';
 import { Rocks } from '../objects/Rocks';
-import { Explosion, Laser, Rock } from '../Types';
+import { Explosion, Laser, SpaceObject } from '../Types';
 
 interface WorldProps {
     engine: Engine;
@@ -14,7 +15,8 @@ interface WorldProps {
 export const SpaceWorld = (props: WorldProps): JSX.Element => {
 	const { engine, } = props;
     [ engine.explosions, engine.setExplosions ] = useState<Explosion[]>([]);
-    [ engine.rocks, engine.setRocks ] = useState<Rock[]>([]);
+    [ engine.rocks, engine.setRocks ] = useState<SpaceObject[]>([]);
+    [ engine.rings, engine.setRings ] = useState<SpaceObject[]>([]);
     [ engine.lasers, engine.setLasers ] = useState<Laser[]>([]);
     const count = 2000;
     const [ earthTexture, moonTexture ] = useLoader(THREE.TextureLoader, ['/textures/earth.jpg', '/textures/moon.png']);
@@ -25,6 +27,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     const moon = useRef<THREE.Mesh>(null);
     const rocks = useRef<THREE.Group>(null);
     const lasers = useRef<THREE.Group>(null);
+    const rings = useRef<THREE.Group>(null);
     
     const positions = useMemo(() => {
         // generate stars
@@ -53,16 +56,32 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         }
     }, [engine, rocks]);
 
+    useEffect(() => {
+        if (rings.current) {
+            engine.ringGroup = rings.current;
+        }
+    }, [engine, rings]);
+
     /*useEffect(() => {
         if (engine.rocks.length === 0) {
-            const testRock = {"id":"d3855500-a382-11ed-82d5-4d6ddf1848ca","activity":{"name":"TT1A2 Create billing longass activity name","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"time":1530457210538,"workflow":"63dc9a2afe01992a5aa4adb9"};
+            const testRock = {"id":"453be010-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A1 Create policy","className":"CreatePolicy","eventName":"CreatePolicy","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2982","time":1530457220529,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
             engine.addRock(testRock);
+            engine.network.addActivity(testRock);
         }
         if (engine.rocks.length === 1) {
-            const testRock1 = {"id":"d3855500-a382-11ed-82d5-4d6ddf1848cb","activity":{"name":"TT1A3 Create duck","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"time":1530457210538,"workflow":"63dc9a2afe01992a5aa4adb9"};
+            const testRock1 = {"id":"47997f20-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A2 Create billing","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2983","time":1530457224498,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
             engine.addRock(testRock1);
+            engine.network.addActivity(testRock1);
         }
-    }, [engine, engine.rocks]);*/
+    }, [engine, engine.rocks]);
+
+    useEffect(() => {
+        if (engine.rings.length === 0) {
+            const testRing = {"id":"390cfa90-a8f1-11ed-b0e3-579384e6ae03","stage":{"name":"TT1 Policy Setup","state":"Policy Setup"},"stageId":"63e5b6e7ff668aa80bfe2981","time":1530457200086,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
+            engine.addRing(testRing);
+            engine.network.transitionStage(testRing);
+        }
+    }, [engine, engine.rings]);*/
 
     useFrame(() => {
         // maintain group with same distance to camera
@@ -85,8 +104,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                     if (collisionResults.length && collisionResults[0].point.distanceTo(laser.group.position) < 40) {
                         const collision = collisionResults[0];
                         lasersHit.add(laser.guid);
-                        if (engine.meshIdToRockId.has(collision.object.uuid)) {
-                            engine.network.sendRock(engine.meshIdToRockId.get(collision.object.uuid)!);
+                        if (engine.meshIdToObjectId.has(collision.object.uuid)) {
+                            engine.network.sendId(engine.meshIdToObjectId.get(collision.object.uuid)!);
                         }
                     }
                 }
@@ -100,7 +119,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             <fog attach="fog" args={['#070710', 100, 700]} />
             <ambientLight intensity={0.25} />
             <Lasers group={lasers} lasers={engine.lasers} />
-            <Rocks group={rocks} rocks={engine.rocks} meshIdToRockId={engine.meshIdToRockId} />
+            <Rocks group={rocks} rocks={engine.rocks} meshIdToRockId={engine.meshIdToObjectId} />
+            <Rings group={rings} rings={engine.rings} meshIdToRingId={engine.meshIdToObjectId} />
             <Explosions explosions={engine.explosions} />
             <group ref={cameraGroup}>
                 <points>      

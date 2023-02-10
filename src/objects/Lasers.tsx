@@ -36,7 +36,7 @@ export const Laser = (props: LaserProps) => {
     
     useFrame((state: RootState, delta: number) => {
         if (group.current) {
-            group.current.position.add(laser.direction.clone().multiplyScalar(-delta * 200));
+            group.current.position.add(laser.direction.clone().multiplyScalar(-delta * 500));
         }
     });
 
@@ -49,8 +49,8 @@ export const Laser = (props: LaserProps) => {
 
     return (
         <group ref={group} position={laser.position} quaternion={laser.quaternion}>
-            <mesh position={[-0.3, 0, -7]} geometry={geometry} material={material} />
-            <mesh position={[0.3, 0, -7]} geometry={geometry} material={material} />
+            <mesh position={[-0.3, 0, -3]} geometry={geometry} material={material} />
+            <mesh position={[0.3, 0, -3]} geometry={geometry} material={material} />
         </group>
     )
 }

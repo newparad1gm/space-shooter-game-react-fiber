@@ -11,12 +11,11 @@ export type Explosion = {
     time: number;
 }
 
-export type Rock = {
+export type SpaceObject = {
     guid: string;
     position: THREE.Vector3;
     data: JsonResponse;
     mesh?: THREE.Mesh;
-    collider?: THREE.Sphere;
 }
 
 export type Laser = {
@@ -28,3 +27,29 @@ export type Laser = {
     raycaster: THREE.Raycaster;
     group?: THREE.Group;
 }
+
+export type Workflow = {
+    name: string;
+    id: string;
+    activities: Activity[];
+    currentStage?: Stage;
+}
+
+export type Activity = {
+    name: string;
+    id: string;
+    executionTime: Date;
+}
+
+export type Stage = {
+    name: string;
+    id: string;
+    enteredTime: Date;
+}
+
+/*export type Ring = {
+    guid: string;
+    position: THREE.Vector3;
+    data: JsonResponse;
+    mesh?: THREE.Mesh;
+}*/

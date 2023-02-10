@@ -15,6 +15,7 @@ export const Ship = (props: ShipProps) => {
     const model = useRef<THREE.Group>(null);
     const front = useRef<THREE.Object3D>(null);
     [ engine.firstPerson, engine.setFirstPerson ] = useState<boolean>(false);
+    const [ engineOn, setEngineOn ] = useState<boolean>(false);
 
     const cameraOrigin: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 3.0, 0), []);
     const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 0, 0), []);
@@ -23,6 +24,10 @@ export const Ship = (props: ShipProps) => {
     const tempDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
 
     const keyStates: Set<string> = useMemo(() => new Set(), []);
+
+    const shipray: THREE.Raycaster = useMemo(() => new THREE.Raycaster(), []);
+    const shiprayPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const shiprayDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
 
     const setThirdPersonCamera = useCallback((ship: THREE.Group, cameraOrigin: THREE.Vector3, movementX: number, movementY: number) => {
         // third person camera based on sphere around the camera origin, camera will always look at origin
@@ -145,10 +150,26 @@ export const Ship = (props: ShipProps) => {
 		controls(delta);
         engine.setRay();
         engine.shootRay();
+        let tempRay = engine.raycaster;
+        if (!engine.firstPerson && model.current) {
+            tempRay = shipray;
+            tempRay.layers.set(1);
+            model.current.getWorldDirection(shiprayDirection);
+            shiprayDirection.negate();
+            tempRay.set(model.current.getWorldPosition(shiprayPosition), shiprayDirection);
+        }
+        engine.intersectGroup(tempRay, engine.ringGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
+            if (intersection.distance < 0.4 && speed() > 0.1 && engine.meshIdToObjectId.has(intersection.object.uuid)) {
+                engine.network.sendId(engine.meshIdToObjectId.get(intersection.object.uuid)!);
+            }
+        })
 		
 		if (speed() > 0.1) {
             model.current && rotateQuat(model.current);
-            ship.current && calculatePosition(delta, ship.current)
+            ship.current && calculatePosition(delta, ship.current);
+            setEngineOn(true);
+        } else {
+            setEngineOn(false);
         }
     });
 

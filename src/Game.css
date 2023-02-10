@@ -35,14 +35,19 @@
     position: fixed;
     bottom: 0;
     right: 0;
-    height: 300px;
     width: 500px;
+    height: 100%;
     filter: alpha(opacity=90);
     z-index: 100;
 }
 
-#rockData {
+.workflowData {
+    height: 70%;
+    overflow-y: auto;
+}
+
+.hudData {
     text-align: left;
     overflow-wrap: break-word;
-    color: red;
+    color: white;
 }

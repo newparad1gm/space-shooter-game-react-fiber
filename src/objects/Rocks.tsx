@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
-import { Rock as RockType } from '../Types';
+import { SpaceObject as RockType } from '../Types';
+import { TextSprite } from './TextSprite';
 
 type GLTFResult = GLTF & {
 	nodes: {
@@ -47,25 +48,6 @@ export const Rock = (props: RockProps) => {
 	const { rock, geometry, material, meshIdToRockId } = props;
     const mesh = useRef<THREE.Mesh>(null);
     const scale = useMemo(() => new THREE.Vector3(randomScale(), randomScale(), randomScale()), []);
-    const textMaterial = useMemo(() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 2000;
-        canvas.height = 50;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.font = '50px Georgia';
-            ctx.fillStyle = '#ff0000';
-            ctx.textBaseline = 'middle'
-            ctx.textAlign = 'center';
-            ctx.fillText(rock.data.activity.name, canvas.width / 2, canvas.height / 2);
-
-            const texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            const material = new THREE.SpriteMaterial({ map: texture });
-            material.depthWrite = false;
-            return material;
-        }
-    }, [rock]);
 
     useEffect(() => {
         if (mesh.current) {
@@ -95,7 +77,7 @@ export const Rock = (props: RockProps) => {
 
 	return (
 		<group position={rock.position}>
-			<sprite position={[0, (scale.y / 2) + 2, 0]} material={textMaterial} scale={[80, 3, 1]} />
+            <TextSprite text={rock.data.activity.name} position={[0, (scale.y / 2) + 2, 0]} color={'#ff0000'} font={'50px Georgia'} />
             <mesh ref={mesh} geometry={geometry} material={material} material-roughness={1} material-metalness={0.5} layers={1} scale={scale} />
 		</group>
 	)

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
@@ -17,6 +17,19 @@ export const Game = (): JSX.Element => {
     const [ gameStarted, setGameStarted ] = useState<boolean>(false);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
 
+    const onWindowResize = useCallback(() => {
+        const camera = engine.camera;
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }, [engine.camera]);
+
+    useEffect(() => {
+        if (gameStarted) {
+            window.addEventListener('resize', onWindowResize);
+        }
+    }, [gameStarted, onWindowResize]);
+
     return (
         <div style={{width: '100%', height: '100vh'}} >
             { gameStarted && <Canvas
@@ -27,6 +40,7 @@ export const Game = (): JSX.Element => {
                     engine.scene = scene;
                     engine.camera = camera as THREE.PerspectiveCamera;
                     engine.camera.layers.enable(1);
+                    engine.clock.start();
                 }}
             >
                 <Crosshair engine={engine} />

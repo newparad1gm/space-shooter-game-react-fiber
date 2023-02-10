@@ -1,13 +1,17 @@
 import * as THREE from 'three';
-import { Explosion, JsonResponse, Laser, Rock } from '../Types';
+import { Explosion, JsonResponse, Laser, SpaceObject, Workflow } from '../Types';
 import { Network } from './Network';
 
 export class Engine {
+    clock: THREE.Clock;
+
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     renderer: THREE.WebGLRenderer;
 
     raycaster: THREE.Raycaster;
+    cameraPosition: THREE.Vector3;
+    cameraDirection: THREE.Vector3;
 
     lasers: Laser[];
     setLasers?: React.Dispatch<React.SetStateAction<Laser[]>>;
@@ -18,69 +22,90 @@ export class Engine {
     setExplosions?: React.Dispatch<React.SetStateAction<Explosion[]>>;
     explosionTimeout: NodeJS.Timeout | undefined;
 
-    meshIdToRockId: Map<string, string>;
-    idToRock: Map<string, Rock>;
-    rocks: Rock[];
-    setRocks?: React.Dispatch<React.SetStateAction<Rock[]>>;
-    rockCount: number = 0;
+    objectCount: number = 0;
+
+    rocks: SpaceObject[];
+    setRocks?: React.Dispatch<React.SetStateAction<SpaceObject[]>>;
     rockGroup: THREE.Group;
 
-    currentRock?: Rock;
-    setCurrentRock?: React.Dispatch<React.SetStateAction<Rock | undefined>>;
+    currentRock?: SpaceObject;
+    setCurrentRock?: React.Dispatch<React.SetStateAction<SpaceObject | undefined>>;
+
+    rings: SpaceObject[];
+    setRings?: React.Dispatch<React.SetStateAction<SpaceObject[]>>;
+    ringGroup: THREE.Group;
+
+    meshIdToObjectId: Map<string, string>;
+    idToObject: Map<string, SpaceObject>;
 
     firstPerson: boolean;
     setFirstPerson?: React.Dispatch<React.SetStateAction<boolean>>;
 
     network: Network;
 
+    workflows: Workflow[];
+    setWorkflows?: React.Dispatch<React.SetStateAction<Workflow[]>>;
+
     constructor() {
+        this.clock = new THREE.Clock(false);
+
         this.camera = new THREE.PerspectiveCamera();
         this.scene = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer();
+        this.cameraPosition = new THREE.Vector3();
+        this.cameraDirection = new THREE.Vector3();
 
         this.lasers = [];
         this.explosions = [];
         this.rocks = [];
-        this.idToRock = new Map();
-        this.meshIdToRockId = new Map();
+        this.idToObject = new Map();
+        this.meshIdToObjectId = new Map();
         this.rockGroup = new THREE.Group();
+        this.ringGroup = new THREE.Group();
+        this.rings = [];
 
         this.firstPerson = false;
         this.raycaster = new THREE.Raycaster();
         this.network = new Network(this);
+        this.workflows = [];
     }
 
     setRay = () => {
-        this.raycaster.set(this.camera.getWorldPosition(new THREE.Vector3()), this.camera.getWorldDirection(new THREE.Vector3()));
+        this.raycaster.set(this.camera.getWorldPosition(this.cameraPosition), this.camera.getWorldDirection(this.cameraDirection));
     }
 
     shootRay = () => {
-        const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
         this.raycaster.layers.set(1);
-        this.raycaster.intersectObject(this.rockGroup, true, intersects);
         this.setCurrentRock && this.setCurrentRock(undefined);
-        if (intersects.length) {
-            const intersection = intersects[0];
+        this.intersectGroup(this.raycaster, this.rockGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
             const object = intersection.object;
 
             object.traverse(child => {
                 if (child instanceof THREE.Mesh) {
-                    const rockId = this.meshIdToRockId.get(child.uuid);
-                    if (rockId && this.idToRock.has(rockId)) {
-                        this.setCurrentRock && this.setCurrentRock(this.idToRock.get(rockId));
+                    const rockId = this.meshIdToObjectId.get(child.uuid);
+                    if (rockId && this.idToObject.has(rockId)) {
+                        this.setCurrentRock && this.setCurrentRock(this.idToObject.get(rockId));
                     }
                 }
             });
+        });
+    }
+
+    intersectGroup = (raycaster: THREE.Raycaster, group: THREE.Group, intersectCallback: (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => void) => {
+        const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
+        raycaster.intersectObject(group, true, intersects);
+        if (intersects.length) {
+            intersectCallback(intersects[0]);
         }
     }
 
     destroyRock = (rockId: string) => {
-        if (this.idToRock.has(rockId)) {
-            const rock = this.idToRock.get(rockId)!;
+        if (this.idToObject.has(rockId)) {
+            const rock = this.idToObject.get(rockId)!;
             rock.mesh && this.addExplosion(rock.position, rock.mesh);
             this.setRocks && this.setRocks(this.rocks.filter(r => r.guid !== rock.guid));
-            this.idToRock.delete(rock.guid);
-            rock.mesh && this.meshIdToRockId.delete(rock.mesh.uuid);
+            this.idToObject.delete(rock.guid);
+            rock.mesh && this.meshIdToObjectId.delete(rock.mesh.uuid);
             this.setCurrentRock && this.setCurrentRock(undefined);
         }
     }
@@ -94,16 +119,41 @@ export class Engine {
         }
     }
 
+    getZPos = () => {
+        return 25 + this.objectCount * 20;
+    }
+
     addRock = (rockData: JsonResponse) => {
-        let zPos = 25 + this.rockCount * 10;
-        const rock: Rock = {
+        let zPos = this.getZPos();
+        const rock: SpaceObject = {
             guid: rockData.id,
             position: new THREE.Vector3((-1 + Math.random() * 2) * 20, (-1 + Math.random() * 2) * 20, zPos),
             data: rockData
         }
-        this.idToRock.set(rock.guid, rock);
+        this.idToObject.set(rock.guid, rock);
         this.setRocks && this.setRocks([...this.rocks, rock]);
-        this.rockCount += 1;
+        this.objectCount += 1;
+    }
+
+    addRing = (ringData: JsonResponse) => {
+        let zPos = this.getZPos();
+        const ring: SpaceObject = {
+            guid: ringData.id,
+            position: new THREE.Vector3(0, 0, zPos),
+            data: ringData
+        }
+        this.idToObject.set(ring.guid, ring);
+        this.setRings && this.setRings([...this.rings, ring]);
+        this.objectCount += 1;
+    }
+
+    destroyRing = (ringId: string) => {
+        if (this.idToObject.has(ringId)) {
+            const ring = this.idToObject.get(ringId)!;
+            this.setRings && this.setRings(this.rings.filter(r => r.guid !== ring.guid));
+            this.idToObject.delete(ring.guid);
+            ring.mesh && this.meshIdToObjectId.delete(ring.mesh.uuid);
+        }
     }
 
     shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
