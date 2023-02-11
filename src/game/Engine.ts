@@ -13,6 +13,8 @@ export class Engine {
     cameraPosition: THREE.Vector3;
     cameraDirection: THREE.Vector3;
 
+    playerPosition: THREE.Vector3;
+
     lasers: Laser[];
     setLasers?: React.Dispatch<React.SetStateAction<Laser[]>>;
     laserTimeout: NodeJS.Timeout | undefined;
@@ -54,6 +56,7 @@ export class Engine {
         this.renderer = new THREE.WebGLRenderer();
         this.cameraPosition = new THREE.Vector3();
         this.cameraDirection = new THREE.Vector3();
+        this.playerPosition = new THREE.Vector3()
 
         this.lasers = [];
         this.explosions = [];
@@ -99,6 +102,22 @@ export class Engine {
         }
     }
 
+    getZPos = () => {
+        return 30 + this.objectCount * 30;
+    }
+
+    addRock = (rockData: JsonResponse) => {
+        let zPos = this.getZPos();
+        const rock: SpaceObject = {
+            guid: rockData.id,
+            position: new THREE.Vector3((-1 + Math.random() * 2) * 15, (-1 + Math.random() * 2) * 15, zPos),
+            data: rockData
+        }
+        this.idToObject.set(rock.guid, rock);
+        this.setRocks && this.setRocks([...this.rocks, rock]);
+        this.objectCount += 1;
+    }
+
     destroyRock = (rockId: string) => {
         if (this.idToObject.has(rockId)) {
             const rock = this.idToObject.get(rockId)!;
@@ -119,27 +138,11 @@ export class Engine {
         }
     }
 
-    getZPos = () => {
-        return 25 + this.objectCount * 20;
-    }
-
-    addRock = (rockData: JsonResponse) => {
-        let zPos = this.getZPos();
-        const rock: SpaceObject = {
-            guid: rockData.id,
-            position: new THREE.Vector3((-1 + Math.random() * 2) * 20, (-1 + Math.random() * 2) * 20, zPos),
-            data: rockData
-        }
-        this.idToObject.set(rock.guid, rock);
-        this.setRocks && this.setRocks([...this.rocks, rock]);
-        this.objectCount += 1;
-    }
-
     addRing = (ringData: JsonResponse) => {
         let zPos = this.getZPos();
         const ring: SpaceObject = {
             guid: ringData.id,
-            position: new THREE.Vector3(0, 0, zPos),
+            position: new THREE.Vector3((-1 + Math.random() * 2) * 5, (-1 + Math.random() * 2) * 5, zPos),
             data: ringData
         }
         this.idToObject.set(ring.guid, ring);

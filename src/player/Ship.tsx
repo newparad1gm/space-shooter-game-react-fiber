@@ -147,6 +147,7 @@ export const Ship = (props: ShipProps) => {
     }, [cameraOrigin, engine.camera, engine.firstPerson, velocity]);
 
     useFrame((state: RootState, delta: number) => {
+        ship.current && ship.current.getWorldPosition(engine.playerPosition);
 		controls(delta);
         engine.setRay();
         engine.shootRay();

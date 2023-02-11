@@ -86,7 +86,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     useFrame(() => {
         // maintain group with same distance to camera
         if (cameraGroup.current) {
-            cameraGroup.current.position.copy(engine.camera.position);
+            cameraGroup.current.position.copy(engine.playerPosition);
         }
         // rotate and orbit planets
         if (earth.current && moon.current && earthMoon.current) {

@@ -14,7 +14,7 @@ import './Game.css';
 export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
     [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
-    const [ gameStarted, setGameStarted ] = useState<boolean>(false);
+    const [ gameStarted, setGameStarted ] = useState<boolean>(true);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
 
     const onWindowResize = useCallback(() => {
