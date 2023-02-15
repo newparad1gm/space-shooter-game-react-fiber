@@ -7,15 +7,16 @@ import { Ship } from './player/Ship';
 import { Engine } from './game/Engine';
 import { Crosshair } from './objects/Crosshair';
 import { WorldLoader } from './world/WorldLoader';
-import { Hud, GameStartOptions } from './options/GameOptions';
+import { Controls, Hud, GameStartOptions } from './options/GameOptions';
 import { WorldName } from './world/WorldLoader';
 import './Game.css';
 
 export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
     [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
-    const [ gameStarted, setGameStarted ] = useState<boolean>(true);
+    const [ gameStarted, setGameStarted ] = useState<boolean>(false);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
+    const [ controls, setControls ] = useState<boolean>(true);
 
     const onWindowResize = useCallback(() => {
         const camera = engine.camera;
@@ -24,11 +25,32 @@ export const Game = (): JSX.Element => {
         camera.updateProjectionMatrix();
     }, [engine.camera]);
 
+    const handleMouseDown = useCallback(() => {
+        document.body.requestPointerLock();
+    }, []);
+
     useEffect(() => {
         if (gameStarted) {
             window.addEventListener('resize', onWindowResize);
+            document.body.addEventListener('mousedown', handleMouseDown);
         }
-    }, [gameStarted, onWindowResize]);
+    }, [gameStarted, handleMouseDown, onWindowResize]);
+
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        engine.keyStates.add(event.code);
+        if (event.code === 'KeyI') {
+            setControls(c => !c);
+        }
+    }, [engine]);
+
+    const handleKeyUp = useCallback((event: KeyboardEvent) => {
+        engine.keyStates.delete(event.code);
+    }, [engine]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup',handleKeyUp);
+    }, [engine, handleKeyDown, handleKeyUp]);
 
     return (
         <div style={{width: '100%', height: '100vh'}} >
@@ -51,6 +73,7 @@ export const Game = (): JSX.Element => {
                 </EffectComposer>
                 <Stats />
             </Canvas> }
+            { gameStarted && controls && <Controls /> }
             { gameStarted && <Hud engine={engine} /> }
             { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} setGameStarted={setGameStarted} network={engine.network} /> }
         </div>

@@ -20,13 +20,11 @@ export const Ship = (props: ShipProps) => {
 
     const cameraOrigin: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 3.0, 0), []);
     const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const playerDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
 
     const velocity: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const forwardVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const sideVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
-    const forwardVelocity = useRef<number>(0);
-
-    const keyStates: Set<string> = useMemo(() => new Set(), []);
 
     const shipray: THREE.Raycaster = useMemo(() => new THREE.Raycaster(), []);
     const shiprayPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
@@ -46,48 +44,44 @@ export const Ship = (props: ShipProps) => {
         engine.camera.lookAt(ship.position.clone().add(cameraOrigin));
     }, [engine.camera]);
 
+    const handleMouseUp = useCallback(() => {
+        // fire based on camera or ship direction whether first or third person
+        if (document.pointerLockElement !== null && ship.current) {
+            let object: THREE.Object3D = engine.camera;
+            if (!engine.firstPerson && model.current) {
+                object = model.current;
+                object.getWorldDirection(playerDirection);
+            } else {
+                object.getWorldDirection(playerDirection);
+                playerDirection.negate();
+            }
+            engine.shoot(ship.current.getWorldPosition(new THREE.Vector3()), playerDirection, object.getWorldQuaternion(new THREE.Quaternion()));
+        }
+    }, [engine, model, playerDirection, ship]);
+
+    const handleMouseMove = useCallback((event: MouseEvent) => {
+        if (document.pointerLockElement === document.body && ship.current) {
+            const { movementX, movementY } = event;
+            if (!engine.firstPerson) {
+                setThirdPersonCamera(ship.current, cameraOrigin, movementX, movementY);
+            } else {
+                engine.camera.rotation.y -= movementX / 500;
+                const verticalLook = engine.camera.rotation.x - (movementY / 500);
+                if (verticalLook < 1.5 && verticalLook > -1.5) {
+                    engine.camera.rotation.x = verticalLook;
+                }
+            }
+        }
+    }, [cameraOrigin, engine, ship, setThirdPersonCamera]);
+
     useEffect(() => {
         if (ship.current) {
             ship.current.add(engine.camera);
 
-            document.addEventListener('keydown', event => {
-                keyStates.add(event.code);
-            });
-            document.addEventListener('keyup', event => {
-                keyStates.delete(event.code);
-            });
-            document.addEventListener('mouseup', () => {
-                // fire based on camera or ship direction whether first or third person
-                if (document.pointerLockElement !== null && ship.current) {
-                    let object: THREE.Object3D = engine.camera;
-                    let direction = object.getWorldDirection(new THREE.Vector3());
-                    direction = direction.negate();
-                    if (!engine.firstPerson && model.current) {
-                        object = model.current;
-                        direction = object.getWorldDirection(direction);
-                    }
-                    engine.shoot(ship.current.getWorldPosition(new THREE.Vector3()), direction, object.getWorldQuaternion(new THREE.Quaternion()));
-                }
-            });
-            document.body.addEventListener('mousedown', () => {
-                document.body.requestPointerLock();
-            });
-            document.body.addEventListener('mousemove', (event: MouseEvent) => {
-                if (document.pointerLockElement === document.body && ship.current) {
-                    const { movementX, movementY } = event;
-                    if (!engine.firstPerson) {
-                        setThirdPersonCamera(ship.current, cameraOrigin, movementX, movementY);
-                    } else {
-                        engine.camera.rotation.y -= movementX / 500;
-                        const verticalLook = engine.camera.rotation.x - (movementY / 500);
-                        if (verticalLook < 1.5 && verticalLook > -1.5) {
-                            engine.camera.rotation.x = verticalLook;
-                        }
-                    }
-                }
-            });
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.addEventListener('mousemove', handleMouseMove);
         }
-    }, [cameraOrigin, engine, keyStates, ship, setThirdPersonCamera]);
+    }, [engine, ship, handleMouseMove, handleMouseUp]);
 
     useEffect(() => {
         if (engine.firstPerson && ship.current) {
@@ -110,34 +104,29 @@ export const Ship = (props: ShipProps) => {
         if (!engine.firstPerson && model.current) {
             object = model.current;
         }
-        let currForwardVelocity = forwardVelocity.current;
-        if (keyStates.has('KeyW')) {
-            currForwardVelocity = Math.min(0.3, currForwardVelocity + speedDelta);
-        }
-        if (keyStates.has('KeyS')) {
-            currForwardVelocity = Math.max(0, currForwardVelocity - speedDelta);
-        }
         Utils.getForwardVector(object, forwardVector);
         Utils.getSideVector(object, sideVector);
-        if (!engine.firstPerson) {
+        if (!engine.firstPerson && model.current) {
             forwardVector.negate();
             sideVector.negate();
         }
-        if (keyStates.has('KeyW') || keyStates.has('KeyS')) {
-            velocity.add(forwardVector.multiplyScalar(currForwardVelocity));
+        if (engine.keyStates.has('KeyW')) {
+            velocity.add(forwardVector.multiplyScalar(speedDelta));
         }
-        forwardVelocity.current = currForwardVelocity;
-        if (keyStates.has('KeyA')) {
+        if (engine.keyStates.has('KeyA')) {
             velocity.add(sideVector.multiplyScalar(-speedDelta));
         }
-        if (keyStates.has('KeyD')) {
+        if (engine.keyStates.has('KeyD')) {
             velocity.add(sideVector.multiplyScalar(speedDelta));
         }
-        if (keyStates.has('KeyT')) {
-            keyStates.delete('KeyT');
+        if (engine.keyStates.has('KeyS')) {
+            velocity.multiplyScalar(0.98);
+        }
+        if (engine.keyStates.has('KeyT')) {
+            engine.keyStates.delete('KeyT');
             engine.setFirstPerson && engine.setFirstPerson(!engine.firstPerson);
         }
-    }, [engine, keyStates, forwardVector, sideVector, velocity, forwardVelocity]);
+    }, [engine, forwardVector, sideVector, velocity]);
 
     const speed = useCallback(() => {
         return Math.sqrt(velocity.dot(velocity));
@@ -150,7 +139,7 @@ export const Ship = (props: ShipProps) => {
 
     const calculatePosition = useCallback((delta: number, group: THREE.Group) => {
         let damping = Math.exp(-4 * delta) - 1;
-        damping *= 0.1;
+        damping *= 0.05;
         velocity.addScaledVector(velocity, damping);
         const deltaPosition = velocity.clone().multiplyScalar(delta);
         group.position.add(deltaPosition);

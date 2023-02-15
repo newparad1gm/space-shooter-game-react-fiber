@@ -47,6 +47,24 @@ export const Hud = (props: HudProps): JSX.Element => {
     )
 }
 
+export const Controls = (): JSX.Element => {
+    return (
+        <div id='controls' className='transparent'>
+            <div className='hudData'>
+                Controls<br/>
+                W - accelerate<br/>
+                S - brake<br/>
+                A - strafe left<br/>
+                D - strafe right<br/>
+                T - switch from first to third person<br/>
+                Mouse - look around and control direction<br/>
+                Mouse Button 1 - fire laser<br/>
+                I - enable/disable controls<br/>
+            </div>
+        </div>
+    )
+}
+
 interface GameStartOptionsProps {
     worldName: WorldName;
     setWorldName: React.Dispatch<React.SetStateAction<WorldName>>;

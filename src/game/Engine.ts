@@ -13,6 +13,8 @@ export class Engine {
     cameraPosition: THREE.Vector3;
     cameraDirection: THREE.Vector3;
 
+    keyStates: Set<string>;
+
     playerPosition: THREE.Vector3;
 
     lasers: Laser[];
@@ -56,7 +58,9 @@ export class Engine {
         this.renderer = new THREE.WebGLRenderer();
         this.cameraPosition = new THREE.Vector3();
         this.cameraDirection = new THREE.Vector3();
-        this.playerPosition = new THREE.Vector3()
+        this.playerPosition = new THREE.Vector3();
+
+        this.keyStates = new Set();
 
         this.lasers = [];
         this.explosions = [];
