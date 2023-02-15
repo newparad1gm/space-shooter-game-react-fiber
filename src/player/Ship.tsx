@@ -16,12 +16,15 @@ export const Ship = (props: ShipProps) => {
     const front = useRef<THREE.Object3D>(null);
     [ engine.firstPerson, engine.setFirstPerson ] = useState<boolean>(false);
     const [ engineOn, setEngineOn ] = useState<boolean>(false);
+    const engineRef = useRef<THREE.Mesh>(null);
 
     const cameraOrigin: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 3.0, 0), []);
-    const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 0, 0), []);
+    const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
 
     const velocity: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
-    const tempDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const forwardVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const sideVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const forwardVelocity = useRef<number>(0);
 
     const keyStates: Set<string> = useMemo(() => new Set(), []);
 
@@ -106,25 +109,35 @@ export const Ship = (props: ShipProps) => {
         let object: THREE.Object3D = engine.camera;
         if (!engine.firstPerson && model.current) {
             object = model.current;
-            speedDelta = -speedDelta;
         }
+        let currForwardVelocity = forwardVelocity.current;
         if (keyStates.has('KeyW')) {
-            velocity.add(Utils.getForwardVector(object, tempDirection).multiplyScalar(speedDelta));
+            currForwardVelocity = Math.min(0.3, currForwardVelocity + speedDelta);
         }
         if (keyStates.has('KeyS')) {
-            velocity.add(Utils.getForwardVector(object, tempDirection).multiplyScalar(-speedDelta));
+            currForwardVelocity = Math.max(0, currForwardVelocity - speedDelta);
         }
+        Utils.getForwardVector(object, forwardVector);
+        Utils.getSideVector(object, sideVector);
+        if (!engine.firstPerson) {
+            forwardVector.negate();
+            sideVector.negate();
+        }
+        if (keyStates.has('KeyW') || keyStates.has('KeyS')) {
+            velocity.add(forwardVector.multiplyScalar(currForwardVelocity));
+        }
+        forwardVelocity.current = currForwardVelocity;
         if (keyStates.has('KeyA')) {
-            velocity.add(Utils.getSideVector(object, tempDirection).multiplyScalar(-speedDelta));
+            velocity.add(sideVector.multiplyScalar(-speedDelta));
         }
         if (keyStates.has('KeyD')) {
-            velocity.add(Utils.getSideVector(object, tempDirection).multiplyScalar(speedDelta));
+            velocity.add(sideVector.multiplyScalar(speedDelta));
         }
         if (keyStates.has('KeyT')) {
             keyStates.delete('KeyT');
             engine.setFirstPerson && engine.setFirstPerson(!engine.firstPerson);
         }
-    }, [engine, keyStates, tempDirection, velocity]);
+    }, [engine, keyStates, forwardVector, sideVector, velocity, forwardVelocity]);
 
     const speed = useCallback(() => {
         return Math.sqrt(velocity.dot(velocity));
@@ -169,6 +182,10 @@ export const Ship = (props: ShipProps) => {
             model.current && rotateQuat(model.current);
             ship.current && calculatePosition(delta, ship.current);
             setEngineOn(true);
+            if (!engine.firstPerson && engineRef.current) {
+                engineRef.current.position.set(0, 0, 1 + (speed() / 2));
+                engineRef.current.scale.set(Math.min(1, speed()), speed(), Math.min(1, speed()));
+            }
         } else {
             setEngineOn(false);
         }
@@ -179,6 +196,11 @@ export const Ship = (props: ShipProps) => {
             <group ref={model}>
                 <object3D ref={front} position={[0, 0, -3]}></object3D>
                 { !engine.firstPerson && <Spaceship /> }
+                { engineOn && 
+                <mesh ref={engineRef} position={[0, 0, 1]} rotation={[Math.PI / 2, 0, Math.PI]}>
+                    <cylinderGeometry args={[0.25, 0.5, 1]} />
+                    <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
+                </mesh> }
             </group>
 		</group>
 	);
