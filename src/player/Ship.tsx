@@ -16,7 +16,7 @@ export const Ship = (props: ShipProps) => {
     const front = useRef<THREE.Object3D>(null);
     [ engine.firstPerson, engine.setFirstPerson ] = useState<boolean>(false);
     const [ engineOn, setEngineOn ] = useState<boolean>(false);
-    const engineRef = useRef<THREE.Mesh>(null);
+    const engineRef = useRef<THREE.Group>(null);
 
     const cameraOrigin: THREE.Vector3 = useMemo(() => new THREE.Vector3(0, 3.0, 0), []);
     const frontPosition: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
@@ -197,10 +197,16 @@ export const Ship = (props: ShipProps) => {
                 <object3D ref={front} position={[0, 0, -3]}></object3D>
                 { !engine.firstPerson && <Spaceship /> }
                 { engineOn && 
-                <mesh ref={engineRef} position={[0, 0, 1]} rotation={[Math.PI / 2, 0, Math.PI]}>
-                    <cylinderGeometry args={[0.25, 0.5, 1]} />
-                    <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
-                </mesh> }
+                <group ref={engineRef} position={[0, 0, 1]} rotation={[Math.PI / 2, 0, Math.PI]}>
+                    <mesh position={[0, 0, 0]}>
+                        <cylinderGeometry args={[0.25, 0.5, 1]} />
+                        <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
+                    </mesh> 
+                    <mesh position={[0, -1, 0]} rotation={[0, 0, Math.PI]}>
+                        <coneGeometry args={[0.5, 1]} />
+                        <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
+                    </mesh> 
+                </group> }
             </group>
 		</group>
 	);
