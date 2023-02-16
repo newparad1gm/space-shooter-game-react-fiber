@@ -6,15 +6,15 @@ import { TextSprite } from './TextSprite';
 interface RingsProps {
     rings: RingType[];
     meshIdToRingId: Map<string, string>;
+    color: THREE.Color;
     group: React.RefObject<THREE.Group>;
 }
 
 export const Rings = (props: RingsProps) => {
-    const { rings, meshIdToRingId, group } = props;
+    const { rings, meshIdToRingId, color, group } = props;
 
     const ringGeometry: THREE.RingGeometry = useMemo(() => new THREE.RingGeometry(0.9, 1.01, 64), []);
-    const ringColor: THREE.Color = useMemo(() => new THREE.Color('blue'), []);
-    const ringMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: ringColor, side: THREE.DoubleSide }), [ringColor]);
+    const ringMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide }), [color]);
 
     return (
         <group ref={group}>

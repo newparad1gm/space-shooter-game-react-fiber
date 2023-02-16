@@ -172,8 +172,8 @@ export const Ship = (props: ShipProps) => {
             ship.current && calculatePosition(delta, ship.current);
             setEngineOn(true);
             if (!engine.firstPerson && engineRef.current) {
-                engineRef.current.position.set(0, 0, 1 + (speed() / 2));
-                engineRef.current.scale.set(Math.min(1, speed()), speed(), Math.min(1, speed()));
+                engineRef.current.position.set(0, 0, 1 + (speed() / 8));
+                engineRef.current.scale.set(Math.min(1, speed() / 4), speed() / 4, Math.min(1, speed() / 4));
             }
         } else {
             setEngineOn(false);
@@ -188,12 +188,12 @@ export const Ship = (props: ShipProps) => {
                 { engineOn && 
                 <group ref={engineRef} position={[0, 0, 1]} rotation={[Math.PI / 2, 0, Math.PI]}>
                     <mesh position={[0, 0, 0]}>
-                        <cylinderGeometry args={[0.25, 0.5, 1]} />
-                        <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
+                        <cylinderGeometry args={[0.15, 0.4, 1]} />
+                        <meshStandardMaterial color='orange' emissive='orange' emissiveIntensity={50} toneMapped={false} opacity={0.5} transparent={true} />
                     </mesh> 
                     <mesh position={[0, -1, 0]} rotation={[0, 0, Math.PI]}>
-                        <coneGeometry args={[0.5, 1]} />
-                        <meshStandardMaterial color='orange' emissive='orange' toneMapped={false} />
+                        <coneGeometry args={[0.4, 1]} />
+                        <meshStandardMaterial color='orange' emissive='orange' emissiveIntensity={50} toneMapped={false} opacity={0.5} transparent={true} />
                     </mesh> 
                 </group> }
             </group>

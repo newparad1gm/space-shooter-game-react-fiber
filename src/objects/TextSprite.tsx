@@ -29,7 +29,7 @@ export const TextSprite = (props: TextSpriteProps) => {
             material.depthWrite = false;
             return material;
         }
-    }, [text]);
+    }, [text, color, font]);
 
     return (
         <sprite position={position} material={textMaterial} scale={[80, 3, 1]} />

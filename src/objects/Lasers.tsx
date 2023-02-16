@@ -5,15 +5,15 @@ import { Laser as LaserType } from '../Types';
 
 interface LasersProps {
     lasers: LaserType[];
+    color: THREE.Color;
     group: React.RefObject<THREE.Group>;
 }
 
 export const Lasers = (props: LasersProps) => {
-    const { lasers, group } = props;
+    const { lasers, color, group } = props;
 
-    const laserGeometry: THREE.BoxGeometry = useMemo(() => new THREE.BoxGeometry(0.10, 0.10, 20), []);
-    const laserColor: THREE.Color = useMemo(() => new THREE.Color('red'), []);
-    const laserMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: laserColor, toneMapped: false }), [laserColor]);
+    const laserGeometry: THREE.BoxGeometry = useMemo(() => new THREE.BoxGeometry(0.20, 0.20, 20), []);
+    const laserMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: color, toneMapped: false }), [color]);
 
     return (
         <group ref={group}>
@@ -36,7 +36,7 @@ export const Laser = (props: LaserProps) => {
     
     useFrame((state: RootState, delta: number) => {
         if (group.current) {
-            group.current.position.add(laser.direction.clone().multiplyScalar(-delta * 500));
+            group.current.position.add(laser.direction.clone().multiplyScalar(-delta * 300));
         }
     });
 
@@ -49,8 +49,8 @@ export const Laser = (props: LaserProps) => {
 
     return (
         <group ref={group} position={laser.position} quaternion={laser.quaternion}>
-            <mesh position={[-0.3, 0, -3]} geometry={geometry} material={material} />
-            <mesh position={[0.3, 0, -3]} geometry={geometry} material={material} />
+            <mesh position={[-0.3, -0.3, -5]} geometry={geometry} material={material} />
+            <mesh position={[0.3, -0.3, -5]} geometry={geometry} material={material} />
         </group>
     )
 }
