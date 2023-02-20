@@ -25,8 +25,25 @@ export const Rocks = (props: RocksProps): JSX.Element => {
     const { rocks, meshIdToRockId, group } = props;
 
     return (
-        <group ref={group}>
-            { rocks.map(rock => <Rock key={rock.guid} rock={rock} geometry={nodes.node_id4_Material_52_0.geometry} material={materials.Material_52} meshIdToRockId={meshIdToRockId} />) }
+        <group>
+            <group>
+                { rocks.map(rock => <TextSprite 
+                    key={rock.guid}
+                    text={rock.data.activity.name} 
+                    position={[rock.position.x, rock.position.y + (rock.scale.y / 2) + 2, rock.position.z]} 
+                    color={'#ff0000'} 
+                    font={'50px Georgia'} />
+                )}
+            </group>
+            <group ref={group}>
+                { rocks.map(rock => <Rock 
+                    key={rock.guid} 
+                    rock={rock} 
+                    geometry={nodes.node_id4_Material_52_0.geometry} 
+                    material={materials.Material_52} 
+                    meshIdToRockId={meshIdToRockId} />
+                )}
+            </group>
         </group>
     );
 }
@@ -34,7 +51,7 @@ export const Rocks = (props: RocksProps): JSX.Element => {
 useGLTF.preload('/rock.gltf');
 
 const randomScale = () => {
-    return (Math.random() + 0.5) * 10
+    return (Math.random() + 0.5) * 10;
 }
 
 interface RockProps {
@@ -47,7 +64,6 @@ interface RockProps {
 export const Rock = (props: RockProps) => {
 	const { rock, geometry, material, meshIdToRockId } = props;
     const mesh = useRef<THREE.Mesh>(null);
-    const scale = useMemo(() => new THREE.Vector3(randomScale(), randomScale(), randomScale()), []);
 
     useEffect(() => {
         if (mesh.current) {
@@ -77,8 +93,7 @@ export const Rock = (props: RockProps) => {
 
 	return (
 		<group position={rock.position}>
-            <TextSprite text={rock.data.activity.name} position={[0, (scale.y / 2) + 2, 0]} color={'#ff0000'} font={'50px Georgia'} />
-            <mesh ref={mesh} geometry={geometry} material={material} material-roughness={1} material-metalness={0.5} layers={1} scale={scale} />
+            <mesh ref={mesh} geometry={geometry} material={material} material-roughness={1} material-metalness={0.5} layers={1} scale={rock.scale} />
 		</group>
 	)
 }

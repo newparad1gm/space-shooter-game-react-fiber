@@ -36,4 +36,12 @@ export class Utils {
 
         return direction;
     }
+
+    static speed = (velocity: THREE.Vector3) => {
+        return Math.sqrt(velocity.dot(velocity));
+    }
+    
+    static randomScale = () => {
+        return (Math.random() + 0.5) * 10;
+    }
 }

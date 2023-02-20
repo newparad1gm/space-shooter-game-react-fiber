@@ -1,6 +1,8 @@
 import * as THREE from 'three';
+import { Octree } from "three/examples/jsm/math/Octree";
 import { Explosion, JsonResponse, Laser, SpaceObject, Workflow } from '../Types';
 import { Network } from './Network';
+import { Utils } from '../Utils';
 
 export class Engine {
     clock: THREE.Clock;
@@ -16,6 +18,7 @@ export class Engine {
     keyStates: Set<string>;
 
     playerPosition: THREE.Vector3;
+    onFloor: boolean;
 
     lasers: Laser[];
     setLasers?: React.Dispatch<React.SetStateAction<Laser[]>>;
@@ -42,13 +45,12 @@ export class Engine {
     meshIdToObjectId: Map<string, string>;
     idToObject: Map<string, SpaceObject>;
 
-    firstPerson: boolean;
-    setFirstPerson?: React.Dispatch<React.SetStateAction<boolean>>;
-
     network: Network;
 
     workflows: Workflow[];
     setWorkflows?: React.Dispatch<React.SetStateAction<Workflow[]>>;
+
+    octree!: Octree;
 
     constructor() {
         this.clock = new THREE.Clock(false);
@@ -59,6 +61,7 @@ export class Engine {
         this.cameraPosition = new THREE.Vector3();
         this.cameraDirection = new THREE.Vector3();
         this.playerPosition = new THREE.Vector3();
+        this.onFloor = false;
 
         this.keyStates = new Set();
 
@@ -71,10 +74,15 @@ export class Engine {
         this.ringGroup = new THREE.Group();
         this.rings = [];
 
-        this.firstPerson = false;
         this.raycaster = new THREE.Raycaster();
         this.network = new Network(this);
         this.workflows = [];
+
+        this.resetOctree();
+    }
+
+    resetOctree = () => {
+        this.octree = new Octree();
     }
 
     setRay = () => {
@@ -115,7 +123,8 @@ export class Engine {
         const rock: SpaceObject = {
             guid: rockData.id,
             position: new THREE.Vector3((-1 + Math.random() * 2) * 15, (-1 + Math.random() * 2) * 15, zPos),
-            data: rockData
+            data: rockData,
+            scale: new THREE.Vector3(Utils.randomScale(), Utils.randomScale(), Utils.randomScale())
         }
         this.idToObject.set(rock.guid, rock);
         this.setRocks && this.setRocks([...this.rocks, rock]);
@@ -147,7 +156,8 @@ export class Engine {
         const ring: SpaceObject = {
             guid: ringData.id,
             position: new THREE.Vector3((-1 + Math.random() * 2) * 5, (-1 + Math.random() * 2) * 5, zPos),
-            data: ringData
+            data: ringData,
+            scale: new THREE.Vector3(15, 15, 15)
         }
         this.idToObject.set(ring.guid, ring);
         this.setRings && this.setRings([...this.rings, ring]);

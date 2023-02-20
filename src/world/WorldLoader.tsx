@@ -1,9 +1,15 @@
 import React, { Suspense } from "react"
 import { Engine } from "../game/Engine";
 import { SpaceWorld } from "./SpaceWorld";
+import { FPSWorld } from "./FPSWorld";
 
 export enum WorldName {
-    Space = 'Space'
+    Space = 'Space',
+    FPS = 'FPS'
+}
+
+export interface WorldProps {
+    engine: Engine;
 }
 
 interface WorldLoaderProps {
@@ -17,6 +23,7 @@ export const WorldLoader = (props: WorldLoaderProps): JSX.Element => {
     return (
         <Suspense>
             { worldName === WorldName.Space && <SpaceWorld engine={engine} /> }
+            { worldName === WorldName.FPS && <FPSWorld engine={engine} /> }
         </Suspense>
     )
 }

@@ -2,47 +2,26 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { WorldProps } from './WorldLoader';
-import { Ship } from '../player/Ship';
 import { Lasers } from '../objects/Lasers';
 import { Explosions } from '../objects/Explosions';
 import { Rings } from '../objects/Rings';
 import { Rocks } from '../objects/Rocks';
-import { Explosion, Laser, SpaceObject } from '../Types';
+import { Explosion, Floor, Laser, SpaceObject } from '../Types';
+import { FPS } from '../player/FPS';
 
-export const SpaceWorld = (props: WorldProps): JSX.Element => {
+export const FPSWorld = (props: WorldProps): JSX.Element => {
 	const { engine } = props;
     [ engine.explosions, engine.setExplosions ] = useState<Explosion[]>([]);
     [ engine.rocks, engine.setRocks ] = useState<SpaceObject[]>([]);
     [ engine.rings, engine.setRings ] = useState<SpaceObject[]>([]);
     [ engine.lasers, engine.setLasers ] = useState<Laser[]>([]);
-    const count = 2000;
-    const [ earthTexture, moonTexture ] = useLoader(THREE.TextureLoader, ['/textures/earth.jpg', '/textures/moon.png']);
+    const [ floors, setFloors ] = useState<Floor[]>([]);
     const cameraGroup = useRef<THREE.Group>(null);
-    const planets = useRef<THREE.Group>(null);
-    const earthMoon = useRef<THREE.Group>(null);
-    const earth = useRef<THREE.Mesh>(null);
-    const moon = useRef<THREE.Mesh>(null);
     const rocks = useRef<THREE.Group>(null);
     const lasers = useRef<THREE.Group>(null);
     const rings = useRef<THREE.Group>(null);
+    const world = useRef<THREE.Group>(null);
     
-    const positions = useMemo(() => {
-        // generate stars
-        let positions = []
-        for (let i = 0; i < count; i++) {
-            const r = 4000;
-            const theta = 2 * Math.PI * Math.random();
-            const phi = Math.acos(2 * Math.random() - 1);
-            const x = r * Math.cos(theta) * Math.sin(phi) + (-2000 + Math.random() * 4000);
-            const y = r * Math.sin(theta) * Math.sin(phi) + (-2000 + Math.random() * 4000);
-            const z = r * Math.cos(phi) + (-2000 + Math.random() * 4000);
-            positions.push(x);
-            positions.push(y);
-            positions.push(z);
-        }
-        return new Float32Array(positions)
-    }, [count]);
-
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
     }, [engine.renderer]);
@@ -58,14 +37,6 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             engine.ringGroup = rings.current;
         }
     }, [engine, rings]);
-
-    useEffect(() => {
-        if (engine.rocks.length > 0) {
-            engine.octree.fromGraphNode(engine.rockGroup);
-        } else {
-            engine.resetOctree();
-        }
-    }, [engine, engine.rocks]);
 
     /*useEffect(() => {
         if (engine.rocks.length === 0) {
@@ -88,16 +59,19 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         }
     }, [engine, engine.rings]);*/
 
+    useEffect(() => {
+        if (floors.length === 0) {
+            setFloors([{
+                position: new THREE.Vector3(0, 0, 0),
+                dimensions: new THREE.Vector3(100, 0.2, 100)
+            }]);
+        }
+    }, [floors]);
+
     useFrame(() => {
         // maintain group with same distance to camera
         if (cameraGroup.current) {
             cameraGroup.current.position.copy(engine.playerPosition);
-        }
-        // rotate and orbit planets
-        if (earth.current && moon.current && earthMoon.current) {
-            earth.current.rotation.y += 0.001;
-            moon.current.rotation.y += 0.001;
-            earthMoon.current.rotation.y += 0.001;
         }
         // laser hit on rocks through the laser raycaster
         if (lasers.current && engine.lasers.length) {
@@ -119,40 +93,31 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         }
     });
 
+    useEffect(() => {
+        if (world.current && floors.length > 0) {
+            engine.octree.fromGraphNode(world.current);
+        }
+    }, [floors, world]);
+
 	return (
 		<group {...props} dispose={null}>
             <fog attach="fog" args={['#070710', 100, 700]} />
             <ambientLight intensity={0.25} />
+            <group ref={world}>
+                { floors.map(floor => (
+                    <mesh position={floor.position}>
+                        <boxGeometry args={[floor.dimensions.x, floor.dimensions.y, floor.dimensions.z]} />
+                        <meshLambertMaterial color='blue' />
+                    </mesh>
+                ))}
+            </group>
             <Lasers group={lasers} lasers={engine.lasers} color={new THREE.Color('red')} />
             <Rocks group={rocks} rocks={engine.rocks} meshIdToRockId={engine.meshIdToObjectId} />
             <Rings group={rings} rings={engine.rings} meshIdToRingId={engine.meshIdToObjectId} color={new THREE.Color('blue')} />
             <Explosions explosions={engine.explosions} />
             <group ref={cameraGroup}>
-                <points>      
-                    <bufferGeometry attach="geometry">
-                        <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
-                    </bufferGeometry>
-                    <pointsMaterial size={15} sizeAttenuation color="white" fog={false} />
-                </points>
-                <group ref={planets} scale={[50, 50, 50]} position={[-500, -400, 1000]}>
-                    <group ref={earthMoon}>
-                        <mesh ref={earth}>
-                            <sphereGeometry args={[5, 32, 32]} />
-                            <meshStandardMaterial map={earthTexture} roughness={1} fog={false} />
-                        </mesh>
-                        <mesh ref={moon} position={[30, 0, -5]}>
-                            <sphereGeometry args={[0.8, 32, 32]} />
-                            <meshStandardMaterial map={moonTexture} roughness={1} fog={false} />
-                        </mesh>
-                    </group>
-                    <mesh position={[10, 40, 60]}>
-                        <sphereGeometry args={[10, 32, 32]} />
-                        <meshStandardMaterial emissive='yellow' emissiveIntensity={3} toneMapped={false} />
-                        <pointLight distance={6100} intensity={50} color='white' />
-                    </mesh>
-                </group>
             </group>                
-            <Ship engine={engine} />
+            <FPS engine={engine} />
 		</group>
 	)
 }

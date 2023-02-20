@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { Stats } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
-import { Ship } from './player/Ship';
 import { Engine } from './game/Engine';
 import { Crosshair } from './objects/Crosshair';
 import { WorldLoader } from './world/WorldLoader';
@@ -67,7 +66,6 @@ export const Game = (): JSX.Element => {
             >
                 <Crosshair engine={engine} />
                 <WorldLoader engine={engine} worldName={worldName} />
-                <Ship engine={engine} />
                 <EffectComposer>
                     <Bloom luminanceThreshold={1} luminanceSmoothing={0.9} height={300} />
                 </EffectComposer>

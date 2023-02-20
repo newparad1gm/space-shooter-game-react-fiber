@@ -15,6 +15,7 @@ export type SpaceObject = {
     guid: string;
     position: THREE.Vector3;
     data: JsonResponse;
+    scale: THREE.Vector3;
     mesh?: THREE.Mesh;
 }
 
@@ -45,9 +46,7 @@ export type Stage = {
     enteredTime: Date;
 }
 
-/*export type Ring = {
-    guid: string;
+export type Floor = {
     position: THREE.Vector3;
-    data: JsonResponse;
-    mesh?: THREE.Mesh;
-}*/
+    dimensions: THREE.Vector3;
+}
