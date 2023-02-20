@@ -97,7 +97,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         if (world.current && floors.length > 0) {
             engine.octree.fromGraphNode(world.current);
         }
-    }, [floors, world]);
+    }, [engine.octree, floors, world]);
 
 	return (
 		<group {...props} dispose={null}>

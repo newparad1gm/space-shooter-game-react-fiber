@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
@@ -49,10 +49,6 @@ export const Rocks = (props: RocksProps): JSX.Element => {
 }
 
 useGLTF.preload('/rock.gltf');
-
-const randomScale = () => {
-    return (Math.random() + 0.5) * 10;
-}
 
 interface RockProps {
     rock: RockType;

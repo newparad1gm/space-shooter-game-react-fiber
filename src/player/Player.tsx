@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Capsule } from 'three/examples/jsm/math/Capsule';
-import { RootState, useFrame, Vector3 } from '@react-three/fiber'
+import { RootState, useFrame } from '@react-three/fiber'
 import { Engine } from '../game/Engine';
 
 interface PlayerProps {
@@ -21,7 +21,7 @@ export const Player = (props: PlayerProps) => {
         new THREE.Vector3(start.x, start.y, start.z),
         new THREE.Vector3(start.x, start.y + height, start.z), 
         radius
-    ), [height, radius]);
+    ), [height, radius, start.x, start.y, start.z]);
 
     useEffect(() => {
         player.current && player.current.add(engine.camera);
@@ -39,7 +39,7 @@ export const Player = (props: PlayerProps) => {
         //group.position.add(deltaPosition);
         capsule.end.add(deltaPosition);
         group.position.copy(capsule.end);
-    }, [engine.onFloor, gravity, velocity]);
+    }, [capsule.end, engine.onFloor, gravity, velocity]);
 
     const collisions = useCallback(() => {
         const result = engine.octree.capsuleIntersect(capsule);
@@ -51,7 +51,7 @@ export const Player = (props: PlayerProps) => {
             }
             capsule.translate(result.normal.multiplyScalar(result.depth));
         }
-    }, [capsule, engine]);
+    }, [capsule, engine, velocity]);
 
     useFrame((state: RootState, delta: number) => {
         collisions();
