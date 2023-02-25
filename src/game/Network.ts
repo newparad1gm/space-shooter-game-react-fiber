@@ -38,15 +38,15 @@ export class Network {
                     messageData = JSON.parse(JSON.stringify(message.data));
                 }
                 if (messageData.activity) {
-                    this.engine.addRock(messageData.activity);
+                    this.engine.addActivity(messageData.activity);
                     this.addActivity(messageData.activity);
                 } else if (messageData.activityStarted) {
-                    this.engine.destroyRock(messageData.activityStarted.id);
+                    this.engine.removeActivity(messageData.activityStarted.id);
                 } else if (messageData.stage) {
-                    this.engine.addRing(messageData.stage);
+                    this.engine.addTransition(messageData.stage);
                     this.transitionStage(messageData.stage);
                 } else if (messageData.stageEntered) {
-                    this.engine.destroyRing(messageData.stageEntered.id);
+                    this.engine.removeTransition(messageData.stageEntered.id);
                 } else if (messageData.requirementsFulfilled) {
                     this.fulfillRequirements(messageData.requirementsFulfilled);
                 }

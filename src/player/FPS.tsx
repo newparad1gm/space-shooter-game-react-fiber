@@ -4,14 +4,17 @@ import { RootState, useFrame } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Player } from './Player';
 import { Utils } from '../Utils';
+import { Gun } from './Gun';
 
 interface FPSProps {
 	engine: Engine;
+    start: THREE.Vector3;
 }
 
 export const FPS = (props: FPSProps) => {
-	const { engine } = props;
+	const { engine, start } = props;
 	const player = useRef<THREE.Group>(null);
+    const gun = useRef<THREE.Group>(null);
 
     const playerDirection: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const forwardVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
@@ -81,7 +84,26 @@ export const FPS = (props: FPSProps) => {
 		controls(delta);
     });
 
+    useEffect(() => {
+        if (gun.current) {
+            gun.current.scale.set(0.05, 0.05, 0.05);
+            gun.current.position.set(0.0625, -0.0625, -0.125);
+            gun.current.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI / 4);
+            engine.camera.add(gun.current);
+        }
+    }, [engine, gun]);
+    
 	return (
-        <Player player={player} engine={engine} velocity={velocity} gravity={30} start={new THREE.Vector3(0, 5, 0)} radius={1} height={1} />
+        <Player 
+            player={player} 
+            engine={engine} 
+            velocity={velocity} 
+            gravity={30} 
+            start={start} 
+            radius={0.35} 
+            height={1} 
+        >
+            <Gun group={gun} engine={engine} />
+        </Player>
 	);
 }

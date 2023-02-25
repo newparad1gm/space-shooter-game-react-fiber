@@ -8,10 +8,11 @@ import { Utils } from '../Utils';
 
 interface ShipProps {
 	engine: Engine;
+    start: THREE.Vector3;
 }
 
 export const Ship = (props: ShipProps) => {
-	const { engine } = props;
+	const { engine, start } = props;
 	const ship = useRef<THREE.Group>(null);
     const model = useRef<THREE.Group>(null);
     const front = useRef<THREE.Object3D>(null);
@@ -147,7 +148,7 @@ export const Ship = (props: ShipProps) => {
             shiprayDirection.negate();
             tempRay.set(model.current.getWorldPosition(shiprayPosition), shiprayDirection);
         }
-        engine.intersectGroup(tempRay, engine.ringGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
+        engine.intersectGroup(tempRay, engine.transitionGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
             if (intersection.distance < 0.4 && speed > 0.1 && engine.meshIdToObjectId.has(intersection.object.uuid)) {
                 engine.network.sendId(engine.meshIdToObjectId.get(intersection.object.uuid)!);
             }
@@ -166,7 +167,15 @@ export const Ship = (props: ShipProps) => {
     });
 
 	return (
-        <Player player={ship} engine={engine} velocity={velocity} gravity={0} start={new THREE.Vector3(0, 0, 0)} radius={1} height={1}>
+        <Player 
+            player={ship} 
+            engine={engine} 
+            velocity={velocity} 
+            gravity={0} 
+            start={start} 
+            radius={1} 
+            height={1}
+        >
             <group ref={model}>
                 <object3D ref={front} position={[0, 0, -3]}></object3D>
                 { !firstPerson && <Spaceship /> }

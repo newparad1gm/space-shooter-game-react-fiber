@@ -6,17 +6,16 @@ import { Laser as LaserType } from '../Types';
 interface LasersProps {
     lasers: LaserType[];
     color: THREE.Color;
-    group: React.RefObject<THREE.Group>;
 }
 
 export const Lasers = (props: LasersProps) => {
-    const { lasers, color, group } = props;
+    const { lasers, color } = props;
 
     const laserGeometry: THREE.BoxGeometry = useMemo(() => new THREE.BoxGeometry(0.20, 0.20, 20), []);
     const laserMaterial: THREE.MeshBasicMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: color, toneMapped: false }), [color]);
 
     return (
-        <group ref={group}>
+        <group>
             { lasers.map((laser, i) => (
                 <Laser key={i} laser={laser} geometry={laserGeometry} material={laserMaterial} />
             ))}

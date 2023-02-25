@@ -36,9 +36,12 @@ export type Workflow = {
     currentStage?: Stage;
 }
 
-export type Activity = {
-    name: string;
-    executionTime: Date;
+export type WorldObject = {
+    guid: string;
+    data: JsonResponse;
+    scale: THREE.Vector3;
+    position: THREE.Vector3;
+    mesh?: THREE.Mesh;
 }
 
 export type Stage = {
@@ -47,6 +50,7 @@ export type Stage = {
 }
 
 export type Floor = {
+    guid: string;
     position: THREE.Vector3;
     dimensions: THREE.Vector3;
 }

@@ -37,9 +37,9 @@ export const Player = (props: PlayerProps) => {
         velocity.addScaledVector(velocity, damping);
         const deltaPosition = velocity.clone().multiplyScalar(delta);
         //group.position.add(deltaPosition);
-        capsule.end.add(deltaPosition);
+        capsule.translate(deltaPosition);
         group.position.copy(capsule.end);
-    }, [capsule.end, engine.onFloor, gravity, velocity]);
+    }, [capsule, engine.onFloor, gravity, velocity]);
 
     const collisions = useCallback(() => {
         const result = engine.octree.capsuleIntersect(capsule);
@@ -53,8 +53,18 @@ export const Player = (props: PlayerProps) => {
         }
     }, [capsule, engine, velocity]);
 
+    const teleportPlayerIfOob = useCallback(() => {
+        if (capsule.end.y <= - 25) {
+            capsule.start.set(start.x, start.y, start.z);
+            capsule.end.set(start.x, start.y + height, start.z);
+            capsule.radius = radius;
+            velocity.set(0, 0, 0);
+        }
+    }, [capsule, height, radius, start.x, start.y, start.z, velocity]);
+
     useFrame((state: RootState, delta: number) => {
         collisions();
+        teleportPlayerIfOob();
         player.current && player.current.getWorldPosition(engine.playerPosition);
         engine.setRay();
         engine.shootRay();

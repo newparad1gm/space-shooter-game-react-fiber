@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { WorldName } from '../world/WorldLoader';
 import { Utils } from '../Utils';
 import { Engine } from '../game/Engine';
-import { SpaceObject, Workflow } from '../Types';
+import { Workflow, WorldObject } from '../Types';
 import { Network } from '../game/Network';
 
 interface HudProps {
@@ -11,7 +11,7 @@ interface HudProps {
 
 export const Hud = (props: HudProps): JSX.Element => {
     const { engine } = props;
-    [ engine.currentRock, engine.setCurrentRock ] = useState<SpaceObject>();
+    [ engine.currentActivity, engine.setCurrentActivity ] = useState<WorldObject>();
     [ engine.workflows, engine.setWorkflows ] = useState<Workflow[]>([]);
     const workflowsPre = useRef<HTMLPreElement>(null);
     const rockPre = useRef<HTMLPreElement>(null);
@@ -19,9 +19,9 @@ export const Hud = (props: HudProps): JSX.Element => {
 
     useEffect(() => {
         if (rockPre.current) {
-            rockPre.current.innerHTML = engine.currentRock ? JSON.stringify(engine.currentRock.data, undefined, 2) : '';
+            rockPre.current.innerHTML = engine.currentActivity ? JSON.stringify(engine.currentActivity.data, undefined, 2) : '';
         }
-    }, [rockPre, engine.currentRock]);
+    }, [rockPre, engine.currentActivity]);
 
     useEffect(() => {
         if (workflowsPre.current) {

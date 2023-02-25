@@ -8,11 +8,13 @@ import { Crosshair } from './objects/Crosshair';
 import { WorldLoader } from './world/WorldLoader';
 import { Controls, Hud, GameStartOptions } from './options/GameOptions';
 import { WorldName } from './world/WorldLoader';
+import { WorldObject } from './Types';
 import './Game.css';
 
 export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
     [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
+    [ engine.transitions, engine.setTransitions ] = useState<WorldObject[]>([]);
     const [ gameStarted, setGameStarted ] = useState<boolean>(false);
     const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
     const [ controls, setControls ] = useState<boolean>(true);
