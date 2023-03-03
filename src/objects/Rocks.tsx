@@ -32,6 +32,7 @@ export const Rocks = (props: RocksProps): JSX.Element => {
                     key={activity.guid}
                     text={activity.data.activity.name} 
                     position={[activity.position.x, activity.position.y + (activity.scale.y / 2) + 2, activity.position.z]} 
+                    scale={[80, 3, 1]}
                     color={'#ff0000'} 
                     font={'50px Georgia'} />
                 )}

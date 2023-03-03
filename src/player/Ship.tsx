@@ -9,10 +9,11 @@ import { Utils } from '../Utils';
 interface ShipProps {
 	engine: Engine;
     start: THREE.Vector3;
+    loaded: boolean;
 }
 
 export const Ship = (props: ShipProps) => {
-	const { engine, start } = props;
+	const { engine, start, loaded } = props;
 	const ship = useRef<THREE.Group>(null);
     const model = useRef<THREE.Group>(null);
     const front = useRef<THREE.Object3D>(null);
@@ -107,34 +108,36 @@ export const Ship = (props: ShipProps) => {
     }, [engine.camera]);
 
     const controls = useCallback((delta: number) => {
-        let speedDelta = delta * 8;
-        let object: THREE.Object3D = engine.camera;
-        if (!firstPerson && model.current) {
-            object = model.current;
+        if (loaded) {
+            let speedDelta = delta * 8;
+            let object: THREE.Object3D = engine.camera;
+            if (!firstPerson && model.current) {
+                object = model.current;
+            }
+            Utils.getForwardVector(object, forwardVector);
+            Utils.getSideVector(object, sideVector);
+            if (!firstPerson && model.current) {
+                forwardVector.negate();
+                sideVector.negate();
+            }
+            if (engine.keyStates.has('KeyW')) {
+                velocity.add(forwardVector.multiplyScalar(speedDelta));
+            }
+            if (engine.keyStates.has('KeyA')) {
+                velocity.add(sideVector.multiplyScalar(-speedDelta));
+            }
+            if (engine.keyStates.has('KeyD')) {
+                velocity.add(sideVector.multiplyScalar(speedDelta));
+            }
+            if (engine.keyStates.has('KeyS')) {
+                velocity.multiplyScalar(0.98);
+            }
+            if (engine.keyStates.has('KeyT')) {
+                engine.keyStates.delete('KeyT');
+                setFirstPerson(!firstPerson);
+            }
         }
-        Utils.getForwardVector(object, forwardVector);
-        Utils.getSideVector(object, sideVector);
-        if (!firstPerson && model.current) {
-            forwardVector.negate();
-            sideVector.negate();
-        }
-        if (engine.keyStates.has('KeyW')) {
-            velocity.add(forwardVector.multiplyScalar(speedDelta));
-        }
-        if (engine.keyStates.has('KeyA')) {
-            velocity.add(sideVector.multiplyScalar(-speedDelta));
-        }
-        if (engine.keyStates.has('KeyD')) {
-            velocity.add(sideVector.multiplyScalar(speedDelta));
-        }
-        if (engine.keyStates.has('KeyS')) {
-            velocity.multiplyScalar(0.98);
-        }
-        if (engine.keyStates.has('KeyT')) {
-            engine.keyStates.delete('KeyT');
-            setFirstPerson(!firstPerson);
-        }
-    }, [engine, firstPerson, forwardVector, sideVector, velocity, setFirstPerson]);
+    }, [engine, firstPerson, forwardVector, loaded, sideVector, velocity, setFirstPerson]);
 
     useFrame((state: RootState, delta: number) => {
 		controls(delta);
@@ -175,6 +178,7 @@ export const Ship = (props: ShipProps) => {
             start={start} 
             radius={1} 
             height={1}
+            loaded={loaded}
         >
             <group ref={model}>
                 <object3D ref={front} position={[0, 0, -3]}></object3D>

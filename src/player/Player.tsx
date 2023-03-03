@@ -12,11 +12,12 @@ interface PlayerProps {
     start: THREE.Vector3;
     radius: number;
     height: number;
+    loaded: boolean;
     children?: React.ReactNode;
 }
 
 export const Player = (props: PlayerProps) => {
-	const { engine, player, velocity, gravity, start, radius, height, children } = props;
+	const { engine, player, velocity, gravity, start, radius, height, loaded, children } = props;
     const capsule = useMemo(() => new Capsule(
         new THREE.Vector3(start.x, start.y, start.z),
         new THREE.Vector3(start.x, start.y + height, start.z), 
@@ -28,18 +29,20 @@ export const Player = (props: PlayerProps) => {
     }, [engine, player]);
 
     const calculatePosition = useCallback((delta: number, group: THREE.Group) => {
-        let damping = Math.exp(-4 * delta) - 1;
-        if (!engine.onFloor) {
-            velocity.y -= gravity * delta;
-            // small air resistance
-            damping *= 0.05;
+        if (loaded) {
+            let damping = Math.exp(-4 * delta) - 1;
+            if (!engine.onFloor) {
+                velocity.y -= gravity * delta;
+                // small air resistance
+                damping *= 0.05;
+            }
+            velocity.addScaledVector(velocity, damping);
+            const deltaPosition = velocity.clone().multiplyScalar(delta);
+            //group.position.add(deltaPosition);
+            capsule.translate(deltaPosition);
+            group.position.copy(capsule.end);
         }
-        velocity.addScaledVector(velocity, damping);
-        const deltaPosition = velocity.clone().multiplyScalar(delta);
-        //group.position.add(deltaPosition);
-        capsule.translate(deltaPosition);
-        group.position.copy(capsule.end);
-    }, [capsule, engine.onFloor, gravity, velocity]);
+    }, [capsule, engine.onFloor, gravity, velocity, loaded]);
 
     const collisions = useCallback(() => {
         const result = engine.octree.capsuleIntersect(capsule);

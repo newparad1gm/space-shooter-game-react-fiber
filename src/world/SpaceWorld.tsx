@@ -23,6 +23,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     const [ explosions, setExplosions ] = useState<Explosion[]>([]);
     const [ lasers, setLasers ] = useState<Laser[]>([]);
     const [ loaded, setLoaded ] = useState<boolean>(false);
+    const [ controlsLoaded, setControlsLoaded ] = useState<boolean>(false);
 
     const cameraGroup = useRef<THREE.Group>(null);
     const planets = useRef<THREE.Group>(null);
@@ -123,10 +124,10 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             }]);
             clearTimeout(laserData.timeout);
             laserData.timeout = setTimeout(() => setLasers(lasers => lasers.filter(({ time }) => Date.now() - time <= 1000)), 1000);
-        }
+        };
 
-        setLoaded(true);
-    }, [engine, laserData, addExplosion]);
+        setControlsLoaded(true);
+    }, [engine, laserData, addExplosion, setControlsLoaded]);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -145,7 +146,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     }, [engine, rocks]);
 
     /*useEffect(() => {
-        if (loaded) {
+        if (controlsLoaded) {
             if (engine.activities.length === 0) {
                 const testRock = {"id":"453be010-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A1 Create policy","className":"CreatePolicy","eventName":"CreatePolicy","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2982","time":1530457220529,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
                 engine.addActivity(testRock);
@@ -157,17 +158,17 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                 engine.network.addActivity(testRock1);
             }
         }
-    }, [engine, engine.activities, loaded]);
+    }, [controlsLoaded, engine, engine.activities]);
 
     useEffect(() => {
-        if (loaded) {
+        if (controlsLoaded) {
             if (engine.transitions.length === 0) {
                 const testRing = {"id":"390cfa90-a8f1-11ed-b0e3-579384e6ae03","stage":{"name":"TT1 Policy Setup","state":"Policy Setup"},"stageId":"63e5b6e7ff668aa80bfe2981","time":1530457200086,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
                 engine.addTransition(testRing);
                 engine.network.transitionStage(testRing);
             }
         }
-    }, [engine, engine.transitions, loaded]);*/
+    }, [controlsLoaded, engine, engine.transitions]);*/
 
     useFrame(() => {
         // maintain group with same distance to camera
@@ -207,7 +208,9 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         } else {
             engine.resetOctree();
         }
-    }, [engine, engine.activities, rocks]);
+
+        setLoaded(true);
+    }, [engine, engine.activities, rocks, setLoaded]);
 
 	return (
 		<group {...props} dispose={null}>
@@ -242,7 +245,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                     </mesh>
                 </group>
             </group>                
-            <Ship engine={engine} start={new THREE.Vector3(0, 0, 0)} />
+            <Ship engine={engine} start={new THREE.Vector3(0, 0, 0)} loaded={loaded} />
 		</group>
 	)
 }

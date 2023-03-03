@@ -9,10 +9,11 @@ import { Gun } from './Gun';
 interface FPSProps {
 	engine: Engine;
     start: THREE.Vector3;
+    loaded: boolean;
 }
 
 export const FPS = (props: FPSProps) => {
-	const { engine, start } = props;
+	const { engine, start, loaded } = props;
 	const player = useRef<THREE.Group>(null);
     const gun = useRef<THREE.Group>(null);
 
@@ -58,27 +59,40 @@ export const FPS = (props: FPSProps) => {
     }, [engine.camera, player]);
 
     const controls = useCallback((delta: number) => {
-        let speedDelta = delta * 8;
-        Utils.getForwardVector(engine.camera, forwardVector);
-        Utils.getSideVector(engine.camera, sideVector);
-        if (engine.keyStates.has('KeyW')) {
-            velocity.add(forwardVector.multiplyScalar(speedDelta));
-        }
-        if (engine.keyStates.has('KeyS')) {
-            velocity.add(forwardVector.multiplyScalar(-speedDelta));
-        }
-        if (engine.keyStates.has('KeyA')) {
-            velocity.add(sideVector.multiplyScalar(-speedDelta));
-        }
-        if (engine.keyStates.has('KeyD')) {
-            velocity.add(sideVector.multiplyScalar(speedDelta));
-        }
-        if (engine.onFloor) {
-            if (engine.keyStates.has('Space')) {
-                velocity.y = 15;
+        if (loaded) {
+            let speedDelta = delta * 8;
+            Utils.getForwardVector(engine.camera, forwardVector);
+            Utils.getSideVector(engine.camera, sideVector);
+            if (engine.keyStates.has('KeyW')) {
+                velocity.add(forwardVector.multiplyScalar(speedDelta));
+            }
+            if (engine.keyStates.has('KeyS')) {
+                velocity.add(forwardVector.multiplyScalar(-speedDelta));
+            }
+            if (engine.keyStates.has('KeyA')) {
+                velocity.add(sideVector.multiplyScalar(-speedDelta));
+            }
+            if (engine.keyStates.has('KeyD')) {
+                velocity.add(sideVector.multiplyScalar(speedDelta));
+            }
+            if (engine.keyStates.has('KeyE')) {
+                engine.raycaster.layers.set(1);
+                engine.intersectGroup(engine.raycaster, engine.transitionGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
+                    if (intersection.distance < 1 && engine.meshIdToObjectId.has(intersection.object.uuid)) {
+                        const switchId = engine.meshIdToObjectId.get(intersection.object.uuid);
+                        if (switchId && engine.switches.has(switchId)) {
+                            engine.switches.get(switchId)!(true);
+                        }
+                    }
+                });
+            }
+            if (engine.onFloor) {
+                if (engine.keyStates.has('Space')) {
+                    velocity.y = 15;
+                }
             }
         }
-    }, [engine, forwardVector, sideVector, velocity]);
+    }, [engine, forwardVector, loaded, sideVector, velocity]);
 
     useFrame((state: RootState, delta: number) => {
 		controls(delta);
@@ -102,6 +116,7 @@ export const FPS = (props: FPSProps) => {
             start={start} 
             radius={0.35} 
             height={1} 
+            loaded={loaded}
         >
             <Gun group={gun} engine={engine} />
         </Player>

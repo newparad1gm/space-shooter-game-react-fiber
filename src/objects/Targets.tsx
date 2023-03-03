@@ -1,37 +1,35 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Engine } from '../game/Engine';
 import { WorldObject } from '../Types';
-import { TextSprite } from './TextSprite';
+import { TextPlane } from './TextPlane';
 
 interface TargetsProps {
-    engine: Engine;
+    activities: WorldObject[];
+    meshIdToObjectId: Map<string, string>;
     group: React.RefObject<THREE.Group>;
 }
 
 export const Targets = (props: TargetsProps): JSX.Element => {
-    const { engine, group } = props;
-
-    useEffect(() => {
-
-    }, [engine.activities]);
+    const { activities, meshIdToObjectId, group } = props;
 
     return (
         <group>
             <group>
-                { engine.activities.map(activity => activity.position ? (<TextSprite 
+                { activities.map(activity => <TextPlane 
                     key={activity.guid}
                     text={activity.data.activity.name} 
-                    position={[activity.position.x, activity.position.y + (activity.scale.y / 2) + 2, activity.position.z]} 
+                    position={[activity.position.x, activity.position.y + (activity.scale.y / 2) + 0.3, activity.position.z]} 
+                    rotation={[0, Math.PI, 0]}
+                    scale={[6, 0.2, 0.2]}
                     color={'#ff0000'} 
                     font={'50px Georgia'} 
-                />) : null )}
+                />)}
             </group>
             <group ref={group}>
-                { engine.activities.map(activity => <Target 
+                { activities.map(activity => <Target 
                     key={activity.guid} 
                     activity={activity} 
-                    meshIdToTargetId={engine.meshIdToObjectId} 
+                    meshIdToTargetId={meshIdToObjectId} 
                 /> )}
             </group>
         </group>
@@ -46,7 +44,6 @@ interface TargetProps {
 export const Target = (props: TargetProps) => {
 	const { activity, meshIdToTargetId } = props;
     const mesh = useRef<THREE.Mesh>(null);
-    const scale: THREE.Vector3 = useMemo(() => new THREE.Vector3(5, 5, 5), []);
     const ringGeometry: THREE.RingGeometry = useMemo(() => new THREE.RingGeometry(0.7, 1, 64), []);
     const innerRingGeometry: THREE.RingGeometry = useMemo(() => new THREE.RingGeometry(0.7, 0.4, 64), []);
     const innerCircleGeometry: THREE.CircleGeometry = useMemo(() => new THREE.CircleGeometry(0.4, 64), []);
@@ -61,7 +58,7 @@ export const Target = (props: TargetProps) => {
     }, [activity, mesh, meshIdToTargetId]);
 
 	return (
-		<group position={activity.position} scale={scale}>
+		<group position={activity.position} scale={activity.scale}>
             <mesh geometry={ringGeometry} material={redMaterial} />
             <mesh geometry={innerRingGeometry} material={whiteMaterial} />
             <mesh geometry={innerCircleGeometry} material={redMaterial} />

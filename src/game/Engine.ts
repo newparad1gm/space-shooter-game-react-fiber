@@ -31,6 +31,7 @@ export class Engine {
     transitions: WorldObject[];
     setTransitions?: React.Dispatch<React.SetStateAction<WorldObject[]>>;
     transitionGroup: THREE.Group;
+    switches: Map<string, React.Dispatch<React.SetStateAction<boolean>>>;
 
     meshIdToObjectId: Map<string, string>;
     idToObject: Map<string, WorldObject>;
@@ -61,6 +62,7 @@ export class Engine {
         this.activityGroup = new THREE.Group();
         this.transitionGroup = new THREE.Group();
         this.transitions = [];
+        this.switches = new Map();
 
         this.raycaster = new THREE.Raycaster();
         this.network = new Network(this);
@@ -93,7 +95,7 @@ export class Engine {
             });
         });
     }
-
+    
     intersectGroup = (raycaster: THREE.Raycaster, group: THREE.Group, intersectCallback: (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => void) => {
         const intersects: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = [];
         raycaster.intersectObject(group, true, intersects);
