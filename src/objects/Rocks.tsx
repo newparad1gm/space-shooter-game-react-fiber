@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
-import { JsonResponse, WorldObject } from '../Types';
+import { WorldObject } from '../Types';
 import { TextSprite } from './TextSprite';
-import { Engine } from '../game/Engine';
 
 type GLTFResult = GLTF & {
 	nodes: {
@@ -61,24 +60,22 @@ interface RockProps {
 
 export const Rock = (props: RockProps) => {
 	const { activity, geometry, material, meshIdToRockId } = props;
-    const mesh = useRef<THREE.Mesh>(null);
+    const group = useRef<THREE.Group>(null);
 
     useEffect(() => {
-        if (mesh.current) {
-            activity.mesh = mesh.current;
-            meshIdToRockId.set(mesh.current.uuid, activity.guid);
+        if (group.current) {
+            activity.object = group.current;
+            meshIdToRockId.set(group.current.uuid, activity.guid);
         }
-    }, [activity, mesh, meshIdToRockId]);
+    }, [activity, group, meshIdToRockId]);
 
 	return (
-		<group position={activity.position}>
+		<group ref={group} position={activity.position}>
             <mesh 
-                ref={mesh} 
                 geometry={geometry} 
                 material={material} 
                 material-roughness={1} 
                 material-metalness={0.5} 
-                layers={1} 
                 scale={activity.scale} 
             />
 		</group>

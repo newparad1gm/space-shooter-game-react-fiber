@@ -1,61 +1,64 @@
 import React, { createRef, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { RootState, useFrame } from '@react-three/fiber';
 import { Explosion as ExplosionType } from '../Types';
 
-interface ExplosionsProps {
-    explosions: ExplosionType[];
+interface SparksProps {
+    sparks: ExplosionType[];
 }
 
-export const Explosions = (props: ExplosionsProps): JSX.Element => {
-    const { explosions } = props;
+export const Sparks = (props: SparksProps): JSX.Element => {
+    const { sparks } = props;
     return (
         <group>
-            { explosions.map(({ guid, position, scale }) => <Explosion key={guid} position={position} scale={scale * 0.75} />) }
+            { sparks.map(({ guid, position, scale, orientation }) => <Spark key={guid} position={position} scale={scale * 0.75} rotation={orientation} />) }
         </group>
     );
 }
 
 const randomVector = () => {
-    return -1 + Math.random() * 2;
+    return -0.25 + Math.random() * 0.5;
 }
 
 const make = (color: string, speed: number) => {
     return {
         ref: createRef(),
         color,
-        data: new Array(20)
+        data: new Array(50)
             .fill(undefined)
             .map(() => [
                 new THREE.Vector3(),
-                new THREE.Vector3(randomVector(), randomVector(), randomVector()).normalize().multiplyScalar(speed * 0.75)
+                new THREE.Vector3(randomVector(), randomVector(), 1).normalize().multiplyScalar(speed * Math.random())
             ])
     }
 }
 
-interface ExplosionProps {
+interface SparkProps {
     position: THREE.Vector3;
+    rotation?: THREE.Euler;
     scale: number;
 }
 
-export const Explosion = (props: ExplosionProps): JSX.Element => {
-    const { position, scale } = props;
+export const Spark = (props: SparkProps): JSX.Element => {
+    const { position, rotation, scale } = props;
     const group = useRef<THREE.Group>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
-    const particles = useMemo(() => [make('white', 0.8), make('orange', 0.6)], []);
+    const particles = useMemo(() => [make('white', 2), make('yellow', 2)], []);
 
-    useFrame(() => {
+    useFrame((state: RootState, delta: number) => {
         particles.forEach(({ data }, type) => {
             if (group.current) {
                 const mesh = group.current.children[type];
                 if (mesh instanceof THREE.InstancedMesh) {
                     data.forEach(([vec, normal], i) => {
-                        vec.add(normal);
+                        const deltaNormal = normal.clone();
+                        deltaNormal.multiplyScalar(delta);
+                        vec.add(deltaNormal);
                         dummy.position.copy(vec);
                         dummy.updateMatrix();
                         mesh.setMatrixAt(i, dummy.matrix);
                     });
-                    mesh.material.opacity -= mesh.material.opacity > 0 ? 0.025 : 0;
+                    mesh.material.opacity -= mesh.material.opacity > 0 ? delta * 2 : 0;
                     mesh.instanceMatrix.needsUpdate = true;
                 }
             }
@@ -63,10 +66,10 @@ export const Explosion = (props: ExplosionProps): JSX.Element => {
     });
   
     return (
-        <group ref={group} position={position} scale={[scale, scale, scale]}>
+        <group ref={group} position={position} scale={[scale, scale, scale]} rotation={rotation}>
             {particles.map(({ color, data }, index) => (
                 <instancedMesh key={index} args={[undefined, undefined, data.length]} frustumCulled={false}>
-                    <dodecahedronGeometry args={[10, 0]} />
+                    <dodecahedronGeometry args={[0.02, 0]} />
                     <meshBasicMaterial color={color} transparent opacity={1} fog={false} toneMapped={false} />
                 </instancedMesh>
             ))}

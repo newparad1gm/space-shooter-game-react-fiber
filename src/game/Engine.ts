@@ -33,7 +33,7 @@ export class Engine {
     transitionGroup: THREE.Group;
     switches: Map<string, React.Dispatch<React.SetStateAction<boolean>>>;
 
-    meshIdToObjectId: Map<string, string>;
+    object3DIdToWorldObjectId: Map<string, string>;
     idToObject: Map<string, WorldObject>;
 
     network: Network;
@@ -58,7 +58,7 @@ export class Engine {
 
         this.activities = [];
         this.idToObject = new Map();
-        this.meshIdToObjectId = new Map();
+        this.object3DIdToWorldObjectId = new Map();
         this.activityGroup = new THREE.Group();
         this.transitionGroup = new THREE.Group();
         this.transitions = [];
@@ -80,16 +80,15 @@ export class Engine {
     }
 
     shootRay = () => {
-        this.raycaster.layers.set(1);
         this.setCurrentActivity && this.setCurrentActivity(undefined);
         this.intersectGroup(this.raycaster, this.activityGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
             const object = intersection.object;
 
             object.traverse(child => {
-                if (child instanceof THREE.Mesh) {
-                    const rockId = this.meshIdToObjectId.get(child.uuid);
-                    if (rockId && this.idToObject.has(rockId)) {
-                        this.setCurrentActivity && this.setCurrentActivity(this.idToObject.get(rockId));
+                if (child instanceof THREE.Mesh && child.parent instanceof THREE.Group) {
+                    const activityId = this.object3DIdToWorldObjectId.get(child.parent.uuid);
+                    if (activityId && this.idToObject.has(activityId)) {
+                        this.setCurrentActivity && this.setCurrentActivity(this.idToObject.get(activityId));
                     }
                 }
             });

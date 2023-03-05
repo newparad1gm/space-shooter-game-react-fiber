@@ -47,7 +47,7 @@ export const Ship = (props: ShipProps) => {
         }
     }, [engine.camera, firstPerson]);
 
-    const handleMouseUp = useCallback(() => {
+    const handleMouseDown = useCallback(() => {
         // fire based on camera or ship direction whether first or third person
         if (document.pointerLockElement !== null && ship.current) {
             let object: THREE.Object3D = engine.camera;
@@ -79,13 +79,13 @@ export const Ship = (props: ShipProps) => {
 
     useEffect(() => {
         document.body.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousedown', handleMouseDown);
 
         return () => {
             document.body.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousedown', handleMouseDown);
         };
-    }, [cameraOrigin, engine, firstPerson, model, ship, shipDirection, handleMouseMove, handleMouseUp]);
+    }, [cameraOrigin, engine, firstPerson, model, ship, shipDirection, handleMouseMove, handleMouseDown]);
 
     useEffect(() => {
         if (firstPerson && ship.current) {
@@ -146,14 +146,13 @@ export const Ship = (props: ShipProps) => {
         if (!firstPerson && model.current) {
             ship.current && engine.camera.lookAt(ship.current.position.clone().add(cameraOrigin));
             tempRay = shipray;
-            tempRay.layers.set(1);
             model.current.getWorldDirection(shiprayDirection);
             shiprayDirection.negate();
             tempRay.set(model.current.getWorldPosition(shiprayPosition), shiprayDirection);
         }
         engine.intersectGroup(tempRay, engine.transitionGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
-            if (intersection.distance < 0.4 && speed > 0.1 && engine.meshIdToObjectId.has(intersection.object.uuid)) {
-                engine.network.sendId(engine.meshIdToObjectId.get(intersection.object.uuid)!);
+            if (intersection.distance < 0.4 && speed > 0.1 && engine.object3DIdToWorldObjectId.has(intersection.object.uuid)) {
+                engine.network.sendId(engine.object3DIdToWorldObjectId.get(intersection.object.uuid)!);
             }
         });
 

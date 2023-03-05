@@ -34,6 +34,6 @@ export const TextPlane = (props: TextPlaneProps) => {
     }, [text, color, font]);
 
     return (
-        <mesh position={position} geometry={new THREE.PlaneGeometry()} scale={scale} rotation={rotation} material={textMaterial} />
+        <mesh position={position} geometry={new THREE.PlaneGeometry()} scale={scale} rotation={rotation} material={textMaterial} layers={1} />
     )
 }

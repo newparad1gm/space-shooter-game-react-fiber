@@ -39,7 +39,7 @@ export const Ring = (props: RingProps) => {
 
     useEffect(() => {
         if (mesh.current) {
-            transition.mesh = mesh.current;
+            transition.object = mesh.current;
             meshIdToRingId.set(mesh.current.uuid, transition.guid);
         }
     }, [mesh, meshIdToRingId, transition]);
@@ -48,7 +48,7 @@ export const Ring = (props: RingProps) => {
         <group position={transition.position}>
             <TextSprite text={transition.data.stage.name} position={[0, transition.scale.y + 3, 0]} scale={[80, 3, 1]} color={'#0000ff'} font={'50px Georgia'} />
             <mesh scale={transition.scale} geometry={geometry} material={material} />
-            <mesh ref={mesh} scale={transition.scale} geometry={clearGeometry} material={clearMaterial} layers={1} />
+            <mesh ref={mesh} scale={transition.scale} geometry={clearGeometry} material={clearMaterial} />
         </group>
     )
 }

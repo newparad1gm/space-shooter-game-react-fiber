@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { RootState, useFrame } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Player } from './Player';
 import { Utils } from '../Utils';
 import { Gun } from './Gun';
+import { Timeout } from '../Types';
 
 interface FPSProps {
 	engine: Engine;
@@ -14,6 +15,9 @@ interface FPSProps {
 
 export const FPS = (props: FPSProps) => {
 	const { engine, start, loaded } = props;
+
+    const [ shooting, setShooting ] = useState<boolean>(false);
+
 	const player = useRef<THREE.Group>(null);
     const gun = useRef<THREE.Group>(null);
 
@@ -21,9 +25,12 @@ export const FPS = (props: FPSProps) => {
     const forwardVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const sideVector: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
     const velocity: THREE.Vector3 = useMemo(() => new THREE.Vector3(), []);
+    const shootingData: Timeout = useMemo(() => { return { count: 0 } }, []);
 
-    const handleMouseUp = useCallback(() => {
-        // fire based on camera or ship direction whether first or third person
+    const handleMouseDown = useCallback(() => {
+        clearTimeout(shootingData.timeout);
+        setShooting(true);
+        shootingData.timeout = setTimeout(() => setShooting(false), 100);
         if (document.pointerLockElement !== null && player.current) {
             engine.camera.getWorldDirection(playerDirection);
             playerDirection.negate();
@@ -44,13 +51,13 @@ export const FPS = (props: FPSProps) => {
 
     useEffect(() => {
         document.body.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousedown', handleMouseDown);
 
         return () => {
             document.body.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousedown', handleMouseDown);
         };
-    }, [engine, player, playerDirection, handleMouseMove, handleMouseUp]);
+    }, [engine, player, playerDirection, handleMouseMove, handleMouseDown]);
 
     useEffect(() => {
         engine.camera.position.set(0, 0, 0);
@@ -76,10 +83,9 @@ export const FPS = (props: FPSProps) => {
                 velocity.add(sideVector.multiplyScalar(speedDelta));
             }
             if (engine.keyStates.has('KeyE')) {
-                engine.raycaster.layers.set(1);
                 engine.intersectGroup(engine.raycaster, engine.transitionGroup, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
-                    if (intersection.distance < 1 && engine.meshIdToObjectId.has(intersection.object.uuid)) {
-                        const switchId = engine.meshIdToObjectId.get(intersection.object.uuid);
+                    if (intersection.distance < 1 && engine.object3DIdToWorldObjectId.has(intersection.object.uuid)) {
+                        const switchId = engine.object3DIdToWorldObjectId.get(intersection.object.uuid);
                         if (switchId && engine.switches.has(switchId)) {
                             engine.switches.get(switchId)!(true);
                         }
@@ -118,7 +124,7 @@ export const FPS = (props: FPSProps) => {
             height={1} 
             loaded={loaded}
         >
-            <Gun group={gun} engine={engine} />
+            <Gun group={gun} engine={engine} shooting={shooting} />
         </Player>
 	);
 }

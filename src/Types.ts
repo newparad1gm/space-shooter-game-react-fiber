@@ -1,3 +1,4 @@
+import React from 'react';
 import * as THREE from 'three';
 
 export interface JsonResponse {
@@ -9,6 +10,7 @@ export type Explosion = {
     position: THREE.Vector3;
     scale: number;
     time: number;
+    orientation?: THREE.Euler;
 }
 
 export type SpaceObject = {
@@ -21,6 +23,7 @@ export type SpaceObject = {
 
 export type Laser = {
     guid: string;
+    count: number;
     position: THREE.Vector3;
     direction: THREE.Vector3;
     quaternion: THREE.Quaternion;
@@ -41,7 +44,14 @@ export type WorldObject = {
     data: JsonResponse;
     scale: THREE.Vector3;
     position: THREE.Vector3;
-    mesh?: THREE.Mesh;
+    object?: THREE.Object3D;
+}
+
+export type Platform = WorldObject & {
+    nextPlatform?: Platform;
+    setNextPlatform?: React.Dispatch<React.SetStateAction<Platform | undefined>>; 
+    currentPlatform?: boolean;
+    setCurrentPlatform?: React.Dispatch<React.SetStateAction<boolean>>; 
 }
 
 export type Stage = {
@@ -53,4 +63,9 @@ export type Floor = {
     guid: string;
     position: THREE.Vector3;
     dimensions: THREE.Vector3;
+}
+
+export type Timeout = {
+    timeout?: NodeJS.Timeout;
+    count: number;
 }

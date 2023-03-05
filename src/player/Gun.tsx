@@ -4,22 +4,55 @@ Command: npx gltfjsx@6.1.4 gun.glb -t
 */
 
 import * as THREE from 'three';
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { Euler, Vector3 } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Scar } from '../objects/Scar';
 
 interface GunProps {
 	engine: Engine
 	group: React.RefObject<THREE.Group>;
+	shooting: boolean;
 }
 
 export function Gun(props: GunProps) {
-	const { engine, group } = props;
+	const { engine, group, shooting } = props;
     const gun = useRef<THREE.Group>(null);
 
 	return (
 		<group ref={group} dispose={null}>
+			{shooting && <MuzzleFlash position={[2.6, 0.2, 0]} rotation={[Math.PI / 2, Math.PI / 2, Math.PI / 4]} scale={[1, 1, 1]} />}
 			<Scar group={gun} />
+		</group>
+	)
+}
+
+interface MuzzleProps {
+	position: Vector3;
+	scale: Vector3;
+	rotation: Euler;
+}
+
+export function MuzzleFlash(props: MuzzleProps) {
+	const { position, scale, rotation } = props;
+	const yellow: THREE.Color = useMemo(() => new THREE.Color('yellow'), []);
+	const geometry: THREE.ShapeGeometry = useMemo(() => {
+		const square = new THREE.Shape();
+		square.moveTo(0, 1);
+		square.lineTo(1, 0);
+		square.lineTo(0, -1);
+		square.lineTo(-1, 0);
+
+		return new THREE.ShapeGeometry(square);
+	}, []);
+	const material: THREE.MeshStandardMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: yellow, emissive: yellow, emissiveIntensity: 10, toneMapped: false, opacity: 0.5, transparent: true, side: THREE.DoubleSide }), []);
+
+	return (
+		<group position={position} rotation={rotation} scale={scale}>
+			<mesh geometry={geometry} material={material} position={[0, -1, 0]} scale={[0.2, 1, 1]} rotation={[0, 0, 0]} />
+			<mesh geometry={geometry} material={material} position={[-1, 0, 0]} scale={[0.2, 1, 1]} rotation={[0, 0, Math.PI / 2]} />
+			<mesh geometry={geometry} material={material} position={[1, 0, 0]} scale={[0.2, 1, 1]} rotation={[0, 0, Math.PI / 2]} />
+			<mesh geometry={geometry} material={material} position={[0, 1, 0]} scale={[0.2, 1, 1]} rotation={[0, 0, 0]} />
 		</group>
 	)
 }

@@ -43,7 +43,7 @@ interface TargetProps {
 
 export const Target = (props: TargetProps) => {
 	const { activity, meshIdToTargetId } = props;
-    const mesh = useRef<THREE.Mesh>(null);
+    const group = useRef<THREE.Group>(null);
     const ringGeometry: THREE.RingGeometry = useMemo(() => new THREE.RingGeometry(0.7, 1, 64), []);
     const innerRingGeometry: THREE.RingGeometry = useMemo(() => new THREE.RingGeometry(0.7, 0.4, 64), []);
     const innerCircleGeometry: THREE.CircleGeometry = useMemo(() => new THREE.CircleGeometry(0.4, 64), []);
@@ -51,14 +51,14 @@ export const Target = (props: TargetProps) => {
     const whiteMaterial: THREE.MeshStandardMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 'white', side: THREE.DoubleSide }), []);
 
     useEffect(() => {
-        if (mesh.current) {
-            activity.mesh = mesh.current;
-            meshIdToTargetId.set(mesh.current.uuid, activity.guid);
+        if (group.current) {
+            activity.object = group.current;
+            meshIdToTargetId.set(group.current.uuid, activity.guid);
         }
-    }, [activity, mesh, meshIdToTargetId]);
+    }, [activity, group, meshIdToTargetId]);
 
 	return (
-		<group position={activity.position} scale={activity.scale}>
+		<group position={activity.position} scale={activity.scale} ref={group}>
             <mesh geometry={ringGeometry} material={redMaterial} />
             <mesh geometry={innerRingGeometry} material={whiteMaterial} />
             <mesh geometry={innerCircleGeometry} material={redMaterial} />

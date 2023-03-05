@@ -1,23 +1,29 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { WorldProps } from './WorldLoader';
+import { Sparks } from '../objects/Sparks';
 import { Explosions } from '../objects/Explosions';
-import { Explosion, Floor, JsonResponse, WorldObject } from '../Types';
+import { Explosion, Floor, JsonResponse, Platform, Timeout, WorldObject } from '../Types';
 import { FPS } from '../player/FPS';
-import { Targets } from '../objects/Targets';
 import { Platforms } from '../objects/Platforms';
+
+type SparkTimeout = Timeout & {
+    helper: THREE.Mesh;
+}
 
 export const FPSWorld = (props: WorldProps): JSX.Element => {
 	const { engine } = props;
 
     [ engine.activities, engine.setActivities ] = useState<WorldObject[]>([]);
-    [ engine.transitions, engine.setTransitions ] = useState<WorldObject[]>([{
+    [ engine.transitions, engine.setTransitions ] = useState<Platform[]>([{
         guid: '1',
         data: { stage: { name: 'Start' } },
         scale: new THREE.Vector3(1, 1, 1),
-        position: new THREE.Vector3(0, 0, 0)
+        position: new THREE.Vector3(0, 0, 0),
+        currentPlatform: true
     }]);
+    const [ sparks, setSparks ] = useState<Explosion[]>([]);
     const [ explosions, setExplosions ] = useState<Explosion[]>([]);
     const [ loaded, setLoaded ] = useState<boolean>(false);
     const [ controlsLoaded, setControlsLoaded ] = useState<boolean>(false);
@@ -25,13 +31,25 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     const cameraGroup = useRef<THREE.Group>(null);
     const platforms = useRef<THREE.Group>(null);
 
+    const sparkData: SparkTimeout = useMemo(() => {
+        const data = {
+            count: 0,
+            helper: new THREE.Mesh(
+                new THREE.BoxGeometry(1, 1, 10),
+                new THREE.MeshNormalMaterial()
+            )
+        }
+        data.helper.visible = false;
+        return data;
+    }, []);
+
     useEffect(() => {
         engine.addActivity = (activity: JsonResponse) => {
             const object: WorldObject = {
                 guid: activity.id,
                 data: activity,
                 scale: new THREE.Vector3(0.5, 0.5, 0.5),
-                position: new THREE.Vector3((-1 + Math.random() * 2) * 10, (Math.random() + 2), -0.2)
+                position: new THREE.Vector3((-1 + Math.random() * 2) * 6, (-1 + Math.random() * 2) * 1.5, -0.2)
             }
             engine.idToObject.set(object.guid, object);
             engine.setActivities && engine.setActivities([...engine.activities, object]);
@@ -43,24 +61,26 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                 //rock.mesh && addExplosion(rock.mesh.getWorldPosition(new THREE.Vector3()), rock.mesh);
                 engine.setActivities && engine.setActivities(engine.activities.filter(r => r.guid !== rock.guid));
                 engine.idToObject.delete(rock.guid);
-                rock.mesh && engine.meshIdToObjectId.delete(rock.mesh.uuid);
+                rock.object && engine.object3DIdToWorldObjectId.delete(rock.object.uuid);
                 engine.setCurrentActivity && engine.setCurrentActivity(undefined);
             }
         };
 
         engine.addTransition = (transition: JsonResponse) => {
             const transitionCount = engine.transitions.length;
-            const object: WorldObject = {
+            const platform: Platform = {
                 guid: transition.id,
                 data: transition,
                 scale: new THREE.Vector3(1, 1, 1),
-                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, transitionCount * 5)
+                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, transitionCount * 10),
+                currentPlatform: false
             }
-            engine.idToObject.set(object.guid, object);
+            engine.idToObject.set(platform.guid, platform);
             engine.objectCount++;
-            const lastTransition = engine.transitions[transitionCount - 1];
-            lastTransition.data.nextStage = object.data.stage.name;
-            engine.setTransitions && engine.setTransitions([...engine.transitions, object]);
+            const lastTransition = engine.transitions[transitionCount - 1] as Platform;
+            lastTransition.setNextPlatform && lastTransition.setNextPlatform(platform);
+            //lastTransition.data.nextStage = platform.data.stage.name;
+            engine.setTransitions && engine.setTransitions([...engine.transitions, platform]);
         };
 
         engine.removeTransition = (transitionId: string) => {
@@ -68,11 +88,37 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                 const ring = engine.idToObject.get(transitionId)!;
                 engine.setTransitions && engine.setTransitions(engine.transitions.filter(r => r.guid !== ring.guid));
                 engine.idToObject.delete(ring.guid);
-                ring.mesh && engine.meshIdToObjectId.delete(ring.mesh.uuid);
+                ring.object && engine.object3DIdToWorldObjectId.delete(ring.object.uuid);
             }
         };
 
         engine.shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
+            if (platforms.current) {
+                engine.intersectGroup(engine.raycaster, platforms.current, (intersection: THREE.Intersection<THREE.Object3D<THREE.Event>>) => {
+                    const object = intersection.object;
+
+                    object.traverse(child => {
+                        if (child instanceof THREE.Mesh) {
+                            const normal = intersection.face?.normal.clone();
+                            const point = intersection.point;
+                            sparkData.helper.position.copy(point);
+                            const orientation = new THREE.Euler();
+                            if (normal) {
+                                normal.transformDirection(child.matrixWorld);
+                                normal.multiplyScalar(10);
+                                normal.add(point);
+                                sparkData.helper.lookAt(normal);
+                                orientation.copy(sparkData.helper.rotation);
+                            }
+                            const now = Date.now();
+                            clearTimeout(sparkData.timeout);
+                            sparkData.timeout = setTimeout(() => setSparks(sparks => sparks.filter(({ time }) => Date.now() - time <= 500)), 500);
+                            setSparks(sparks => [...sparks.filter(({ time }) => now - time <= 500), { guid: (sparkData.count++).toString(), position: point, scale: 1, time: now, orientation: orientation }]);
+                        }
+                    });
+
+                });
+            }
         };
 
         setControlsLoaded(true);
@@ -133,6 +179,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
             <fog attach="fog" args={['#070710', 100, 700]} />
             <ambientLight intensity={0.25} />
             <Platforms group={platforms} engine={engine} color={new THREE.Color('blue')} />
+            <Sparks sparks={sparks} />
             <Explosions explosions={explosions} />
             <group ref={cameraGroup}>
                 <mesh position={[-500, 400, 1000]}>

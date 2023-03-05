@@ -16,8 +16,8 @@ export const Lasers = (props: LasersProps) => {
 
     return (
         <group>
-            { lasers.map((laser, i) => (
-                <Laser key={i} laser={laser} geometry={laserGeometry} material={laserMaterial} />
+            { lasers.map(laser => (
+                <Laser key={laser.count} laser={laser} geometry={laserGeometry} material={laserMaterial} />
             ))}
         </group>
     )

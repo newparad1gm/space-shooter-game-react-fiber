@@ -33,6 +33,6 @@ export const TextSprite = (props: TextSpriteProps) => {
     }, [text, color, font]);
 
     return (
-        <sprite position={position} material={textMaterial} scale={scale} />
+        <sprite position={position} material={textMaterial} scale={scale} layers={1} />
     )
 }

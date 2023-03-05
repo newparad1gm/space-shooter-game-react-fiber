@@ -7,12 +7,7 @@ import { Lasers } from '../objects/Lasers';
 import { Explosions } from '../objects/Explosions';
 import { Rings } from '../objects/Rings';
 import { Rocks } from '../objects/Rocks';
-import { Explosion, JsonResponse, Laser, WorldObject } from '../Types';
-
-type Timeout = {
-    timeout?: NodeJS.Timeout, 
-    count: number
-}
+import { Explosion, JsonResponse, Laser, Timeout, WorldObject } from '../Types';
 
 export const SpaceWorld = (props: WorldProps): JSX.Element => {
 	const { engine } = props;
@@ -54,7 +49,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
 
     const addExplosion = useCallback((position: THREE.Vector3, object: THREE.Object3D) => {
         const now = Date.now();
-        setExplosions(explosions => [...explosions, { guid: object.uuid, position: position, scale: 1, time: now }]);
+        setExplosions(explosions => [...explosions.filter(({ time }) => now - time <= 1000), { guid: object.uuid, position: position, scale: 1, time: now }]);
         clearTimeout(explosionData.timeout);
         explosionData.timeout = setTimeout(() => setExplosions(explosions => explosions.filter(({ time }) => Date.now() - time <= 1000)), 1000);
     }, [explosionData, setExplosions]);
@@ -81,10 +76,10 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         engine.removeActivity = (activityId: string) => {
             if (engine.idToObject.has(activityId)) {
                 const rock = engine.idToObject.get(activityId)!;
-                rock.mesh && addExplosion(rock.mesh.getWorldPosition(new THREE.Vector3()), rock.mesh);
+                rock.object && addExplosion(rock.object.getWorldPosition(new THREE.Vector3()), rock.object);
                 engine.setActivities && engine.setActivities(engine.activities.filter(r => r.guid !== rock.guid));
                 engine.idToObject.delete(rock.guid);
-                rock.mesh && engine.meshIdToObjectId.delete(rock.mesh.uuid);
+                rock.object && engine.object3DIdToWorldObjectId.delete(rock.object.uuid);
                 engine.setCurrentActivity && engine.setCurrentActivity(undefined);
             }
         };
@@ -109,14 +104,16 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                 const ring = engine.idToObject.get(transitionId)!;
                 engine.setTransitions && engine.setTransitions(engine.transitions.filter(r => r.guid !== ring.guid));
                 engine.idToObject.delete(ring.guid);
-                ring.mesh && engine.meshIdToObjectId.delete(ring.mesh.uuid);
+                ring.object && engine.object3DIdToWorldObjectId.delete(ring.object.uuid);
             }
         };
 
         engine.shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
-            setLasers(lasers => [...lasers, { 
-                guid: (laserData.count++).toString(), 
-                time: Date.now(), 
+            const now = Date.now();
+            setLasers(lasers => [...lasers.filter(({ time }) => now - time <= 1000), { 
+                count: laserData.count++,
+                guid: '', 
+                time: now, 
                 position: position, 
                 direction: direction, 
                 quaternion: quaternion,
@@ -186,14 +183,13 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             const lasersHit: Set<string> = new Set();
             for (const laser of lasers) {
                 if (laser.group) {
-                    laser.raycaster.layers.set(1);
                     const collisionResults = laser.raycaster.intersectObject(engine.activityGroup);
                     if (collisionResults.length && collisionResults[0].point.distanceTo(laser.group.position) < 40) {
                         const collision = collisionResults[0];
                         lasersHit.add(laser.guid);
-                        if (engine.meshIdToObjectId.has(collision.object.uuid)) {
-                            engine.network.sendId(engine.meshIdToObjectId.get(collision.object.uuid)!);
-                            //engine.removeActivity(engine.meshIdToObjectId.get(collision.object.uuid)!);
+                        if (collision.object.parent && engine.object3DIdToWorldObjectId.has(collision.object.parent.uuid)) {
+                            engine.network.sendId(engine.object3DIdToWorldObjectId.get(collision.object.parent.uuid)!);
+                            //engine.removeActivity(engine.object3DIdToWorldObjectId.get(collision.object.parent.uuid)!);
                         }
                     }
                 }
@@ -203,12 +199,10 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     });
 
     useEffect(() => {
+        engine.resetOctree();
         if (rocks.current && engine.activities.length) {
             engine.octree.fromGraphNode(rocks.current);
-        } else {
-            engine.resetOctree();
         }
-
         setLoaded(true);
     }, [engine, engine.activities, rocks, setLoaded]);
 
@@ -217,8 +211,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
             <fog attach="fog" args={['#070710', 100, 700]} />
             <ambientLight intensity={0.25} />
             <Lasers lasers={lasers} color={new THREE.Color('red')} />
-            <Rocks group={rocks} activities={engine.activities} meshIdToObjectId={engine.meshIdToObjectId} />
-            <Rings group={rings} transitions={engine.transitions} meshIdToObjectId={engine.meshIdToObjectId} color={new THREE.Color('blue')} />
+            <Rocks group={rocks} activities={engine.activities} meshIdToObjectId={engine.object3DIdToWorldObjectId} />
+            <Rings group={rings} transitions={engine.transitions} meshIdToObjectId={engine.object3DIdToWorldObjectId} color={new THREE.Color('blue')} />
             <Explosions explosions={explosions} />
             <group ref={cameraGroup}>
                 <points>      
