@@ -22,7 +22,7 @@ export const Player = (props: PlayerProps) => {
         new THREE.Vector3(start.x, start.y, start.z),
         new THREE.Vector3(start.x, start.y + height, start.z), 
         radius
-    ), [height, radius, start.x, start.y, start.z]);
+    ), [height, radius, start]);
 
     useEffect(() => {
         player.current && player.current.add(engine.camera);
@@ -30,7 +30,7 @@ export const Player = (props: PlayerProps) => {
 
     const calculatePosition = useCallback((delta: number, group: THREE.Group) => {
         if (loaded) {
-            let damping = Math.exp(-4 * delta) - 1;
+            let damping = Math.exp(-2 * delta) - 1;
             if (!engine.onFloor) {
                 velocity.y -= gravity * delta;
                 // small air resistance
@@ -56,18 +56,9 @@ export const Player = (props: PlayerProps) => {
         }
     }, [capsule, engine, velocity]);
 
-    const teleportPlayerIfOob = useCallback(() => {
-        if (capsule.end.y <= - 25) {
-            capsule.start.set(start.x, start.y, start.z);
-            capsule.end.set(start.x, start.y + height, start.z);
-            capsule.radius = radius;
-            velocity.set(0, 0, 0);
-        }
-    }, [capsule, height, radius, start.x, start.y, start.z, velocity]);
-
     useFrame((state: RootState, delta: number) => {
         collisions();
-        teleportPlayerIfOob();
+        engine.teleportPlayerIfOob(capsule, height, radius, velocity);
         player.current && player.current.getWorldPosition(engine.playerPosition);
         engine.setRay();
         engine.shootRay();

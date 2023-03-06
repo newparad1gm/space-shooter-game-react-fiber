@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
+import { Capsule } from 'three/examples/jsm/math/Capsule';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { WorldProps } from './WorldLoader';
 import { Sparks } from '../objects/Sparks';
-import { Explosion, Floor, JsonResponse, Platform, Timeout, WorldObject } from '../Types';
+import { Explosion, JsonResponse, Platform, Timeout, WorldObject } from '../Types';
 import { FPS } from '../player/FPS';
 import { Platforms } from '../objects/Platforms';
 
@@ -42,6 +43,8 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     }, []);
 
     useEffect(() => {
+        engine.start.set(0, 10, 0);
+        
         engine.addActivity = (activity: JsonResponse) => {
             const object: WorldObject = {
                 guid: activity.id,
@@ -104,8 +107,17 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
             }
         };
 
+        engine.teleportPlayerIfOob = (capsule: Capsule, height: number, radius: number, velocity: THREE.Vector3) => {
+            if (capsule.end.y <= - 25) {
+                capsule.start.set(engine.start.x, engine.start.y, engine.start.z);
+                capsule.end.set(engine.start.x, engine.start.y + height, engine.start.z);
+                capsule.radius = radius;
+                velocity.set(0, 0, 0);
+            }
+        }
+
         setControlsLoaded(true);
-    }, []);
+    });
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -155,7 +167,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
             engine.octree.fromGraphNode(platforms.current);
             setLoaded(true);
         }
-    }, [engine.octree, engine.transitions, platforms]);
+    }, [engine, engine.transitions, platforms]);
 
 	return (
 		<group {...props} dispose={null}>
@@ -170,7 +182,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                     <spotLight distance={6100} intensity={10} />
                 </mesh>
             </group>
-            <FPS engine={engine} start={new THREE.Vector3(0, 10, 0)} loaded={loaded} />
+            <FPS engine={engine} start={engine.start} loaded={loaded} />
 		</group>
 	)
 }

@@ -40,6 +40,7 @@ export const Platform = (props: PlatformProps) => {
     const { engine, transition, platforms, geometry, material, meshIdToTransitionId } = props;
 
     const [ switchOn, setSwitchOn ] = useState<boolean>(false);
+    const [ closed, setClosed ] = useState<boolean>(true);
     const [ doorYPos, setDoorYPos ] = useState<number>(4);
     const [ shattered, setShattered ] = useState<Explosion[]>([]);
     [ transition.currentPlatform, transition.setCurrentPlatform ] = useState<boolean>(!!transition.currentPlatform);
@@ -49,6 +50,7 @@ export const Platform = (props: PlatformProps) => {
     const group = useRef<THREE.Group>(null);
     const targets = useRef<THREE.Group>(null);
     const door = useRef<THREE.Group>(null);
+    const platform = useRef<THREE.Group>(null);
 
     const shatteredData: Timeout = useMemo(() => { return { count: 0 } }, []);
 
@@ -72,7 +74,14 @@ export const Platform = (props: PlatformProps) => {
                 }
             };
         }
-    }, [transition.currentPlatform]);
+    }, [engine, transition.currentPlatform, addShatter]);
+
+    useEffect(() => {
+        if (transition.currentPlatform && platform.current) {
+            platform.current.getWorldPosition(engine.start);
+            engine.start.y += 10;
+        }
+    }, [engine.start, platform, transition.currentPlatform]);
 
     useEffect(() => {
         engine.switches.set(transition.guid, setSwitchOn);
@@ -89,21 +98,23 @@ export const Platform = (props: PlatformProps) => {
         if (transition.currentPlatform && targets.current) {
             engine.activityGroup = targets.current;
         }
-    }, [targets, transition.currentPlatform]);
+    }, [engine, targets, transition.currentPlatform]);
 
     useEffect(() => {
         if (switchOn && transition.nextPlatform) {
             transition.nextPlatform.setCurrentPlatform && transition.nextPlatform.setCurrentPlatform(true);
+            transition.setCurrentPlatform && transition.setCurrentPlatform(false);
             engine.network.sendId(transition.nextPlatform.guid);
         }
-    }, [switchOn, transition]);
+    }, [engine.network, switchOn, transition]);
 
     useEffect(() => {
-        if (switchOn && platforms.current && doorYPos <= -5) {
+        if (switchOn && platforms.current && doorYPos <= -5 && closed) {
             engine.resetOctree();
             engine.octree.fromGraphNode(platforms.current);
+            setClosed(false);
         }
-    }, [switchOn, platforms, doorYPos]);
+    }, [closed, doorYPos, engine, switchOn, platforms]);
 
     useFrame((state: RootState, delta: number) => {
         if (switchOn && doorYPos > -25) {
@@ -113,7 +124,7 @@ export const Platform = (props: PlatformProps) => {
 
     return (
         <group position={transition.position} scale={transition.scale}>
-            <group>
+            <group ref={platform}>
                 <mesh geometry={geometry} material={material} rotation={[0, 0, 0]} />
             </group>
             {doorYPos > -25 && <group ref={door} position={[0, doorYPos, 4]}>

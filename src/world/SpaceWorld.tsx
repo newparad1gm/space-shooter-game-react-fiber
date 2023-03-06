@@ -55,6 +55,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     }, [explosionData, setExplosions]);
 
     useEffect(() => {
+        engine.start.set(0, 0, 0);
+
         engine.addActivity = (activity: JsonResponse) => {    
             const randomScale = () => {
                 return (Math.random() + 0.5) * 10;
@@ -124,7 +126,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         };
 
         setControlsLoaded(true);
-    }, []);
+    });
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -239,7 +241,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                     </mesh>
                 </group>
             </group>                
-            <Ship engine={engine} start={new THREE.Vector3(0, 0, 0)} loaded={loaded} />
+            <Ship engine={engine} start={engine.start} loaded={loaded} />
 		</group>
 	)
 }

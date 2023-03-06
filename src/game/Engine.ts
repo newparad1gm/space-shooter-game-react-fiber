@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Octree } from "three/examples/jsm/math/Octree";
+import { Capsule } from 'three/examples/jsm/math/Capsule';
 import { WorldObject, JsonResponse, Workflow } from '../Types';
 import { Network } from './Network';
 
@@ -41,6 +42,8 @@ export class Engine {
     workflows: Workflow[];
     setWorkflows?: React.Dispatch<React.SetStateAction<Workflow[]>>;
 
+    start: THREE.Vector3;
+
     octree!: Octree;
 
     constructor() {
@@ -67,7 +70,8 @@ export class Engine {
         this.raycaster = new THREE.Raycaster();
         this.network = new Network(this);
         this.workflows = [];
-
+        
+        this.start = new THREE.Vector3();
         this.resetOctree();
     }
 
@@ -101,6 +105,10 @@ export class Engine {
         if (intersects.length) {
             intersectCallback(intersects[0]);
         }
+    }
+
+    teleportPlayerIfOob = (capsule: Capsule, height: number, radius: number, velocity: THREE.Vector3) => {
+        // overwritten in JSX element
     }
 
     addActivity = (activityData: JsonResponse) => {
