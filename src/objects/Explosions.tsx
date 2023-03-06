@@ -1,7 +1,8 @@
 import React, { createRef, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { RootState, useFrame } from '@react-three/fiber';
 import { Explosion as ExplosionType } from '../Types';
+import { Utils } from '../Utils';
 
 interface ExplosionsProps {
     explosions: ExplosionType[];
@@ -20,19 +21,6 @@ const randomVector = () => {
     return -1 + Math.random() * 2;
 }
 
-const make = (color: string, speed: number) => {
-    return {
-        ref: createRef(),
-        color,
-        data: new Array(20)
-            .fill(undefined)
-            .map(() => [
-                new THREE.Vector3(),
-                new THREE.Vector3(randomVector(), randomVector(), randomVector()).normalize().multiplyScalar(speed * 0.75)
-            ])
-    }
-}
-
 interface ExplosionProps {
     position: THREE.Vector3;
     scale: number;
@@ -42,20 +30,25 @@ export const Explosion = (props: ExplosionProps): JSX.Element => {
     const { position, scale } = props;
     const group = useRef<THREE.Group>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
-    const particles = useMemo(() => [make('white', 0.8), make('orange', 0.6)], []);
+    const particles = useMemo(() => [
+        Utils.make('white', 20, randomVector, randomVector, randomVector, () => 30),
+        Utils.make('orange', 20, randomVector, randomVector, randomVector, () => 30)
+    ], []);
 
-    useFrame(() => {
+    useFrame((state: RootState, delta: number) => {
         particles.forEach(({ data }, type) => {
             if (group.current) {
                 const mesh = group.current.children[type];
                 if (mesh instanceof THREE.InstancedMesh) {
                     data.forEach(([vec, normal], i) => {
-                        vec.add(normal);
+                        const deltaNormal = normal.clone();
+                        deltaNormal.multiplyScalar(delta);
+                        vec.add(deltaNormal);
                         dummy.position.copy(vec);
                         dummy.updateMatrix();
                         mesh.setMatrixAt(i, dummy.matrix);
                     });
-                    mesh.material.opacity -= mesh.material.opacity > 0 ? 0.025 : 0;
+                    mesh.material.opacity -= mesh.material.opacity > 0 ? delta : 0;
                     mesh.instanceMatrix.needsUpdate = true;
                 }
             }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
@@ -33,7 +33,7 @@ export const Rocks = (props: RocksProps): JSX.Element => {
                     position={[activity.position.x, activity.position.y + (activity.scale.y / 2) + 2, activity.position.z]} 
                     scale={[80, 3, 1]}
                     color={'#ff0000'} 
-                    font={'50px Georgia'} />
+                    font={'200px Georgia'} />
                 )}
             </group>
             <group ref={group}>

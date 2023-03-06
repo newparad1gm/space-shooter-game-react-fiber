@@ -1,3 +1,7 @@
+import { createRef } from 'react';
+import * as THREE from 'three';
+import { Particles } from './Types';
+
 export class Utils {
     static now = (): Date => {
         return new Date();
@@ -43,5 +47,18 @@ export class Utils {
     
     static randomScale = () => {
         return (Math.random() + 0.5) * 10;
+    }
+
+    static make = (color: string, count: number, xVector: () => number, yVector: () => number, zVector: () => number, speed: () => number): Particles => {
+        return {
+            ref: createRef(),
+            color,
+            data: new Array(count)
+                .fill(undefined)
+                .map(() => [
+                    new THREE.Vector3(),
+                    new THREE.Vector3(xVector(), yVector(), zVector()).normalize().multiplyScalar(speed())
+                ])
+        }
     }
 }

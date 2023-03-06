@@ -44,6 +44,7 @@ export type WorldObject = {
     data: JsonResponse;
     scale: THREE.Vector3;
     position: THREE.Vector3;
+    rotation?: THREE.Euler;
     object?: THREE.Object3D;
 }
 
@@ -68,4 +69,10 @@ export type Floor = {
 export type Timeout = {
     timeout?: NodeJS.Timeout;
     count: number;
+}
+
+export type Particles = {
+    ref: React.RefObject<any>;
+    color: string;
+    data: THREE.Vector3[][];
 }

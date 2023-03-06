@@ -14,8 +14,9 @@ export const TextSprite = (props: TextSpriteProps) => {
     const { text, position, scale, color, font } = props;
     const textMaterial = useMemo(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = 2000;
-        canvas.height = 50;
+        const [scaleX, scaleY] = Array.isArray(scale) ? [scale[0], scale[1]] : [(scale as THREE.Vector3).x, (scale as THREE.Vector3).y];
+        canvas.width = scaleX * 100;
+        canvas.height = scaleY * 100;
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.font = font; //'50px Georgia';

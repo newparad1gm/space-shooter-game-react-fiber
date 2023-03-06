@@ -29,7 +29,7 @@ export const Switch = (props: SwitchProps) => {
 
     return (
         <group ref={group} position={position} scale={scale} rotation={rotation}>
-            <TextPlane text={text} position={[0, 0, -1]} scale={[4, 0.2, 0.2]} rotation={[Math.PI / 2, 0, Math.PI]} color={color} font={font} />
+            <TextPlane text={text} position={[0, 0, -0.75]} scale={[5, 0.5, 0.5]} rotation={[Math.PI / 2, 0, Math.PI]} color={color} font={font} />
             <mesh>
                 <boxGeometry args={[1, 0.1, 1]} />
                 <meshStandardMaterial color={'white'} />

@@ -2,6 +2,7 @@ import React, { createRef, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { RootState, useFrame } from '@react-three/fiber';
 import { Explosion as ExplosionType } from '../Types';
+import { Utils } from '../Utils';
 
 interface SparksProps {
     sparks: ExplosionType[];
@@ -20,19 +21,6 @@ const randomVector = () => {
     return -0.25 + Math.random() * 0.5;
 }
 
-const make = (color: string, speed: number) => {
-    return {
-        ref: createRef(),
-        color,
-        data: new Array(50)
-            .fill(undefined)
-            .map(() => [
-                new THREE.Vector3(),
-                new THREE.Vector3(randomVector(), randomVector(), 1).normalize().multiplyScalar(speed * Math.random())
-            ])
-    }
-}
-
 interface SparkProps {
     position: THREE.Vector3;
     rotation?: THREE.Euler;
@@ -43,7 +31,10 @@ export const Spark = (props: SparkProps): JSX.Element => {
     const { position, rotation, scale } = props;
     const group = useRef<THREE.Group>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
-    const particles = useMemo(() => [make('white', 2), make('yellow', 2)], []);
+    const particles = useMemo(() => [
+        Utils.make('white', 50, randomVector, randomVector, () => 1, () => (2 * Math.random())),
+        Utils.make('yellow', 50, randomVector, randomVector, () => 1, () => (2 * Math.random()))
+    ], []);
 
     useFrame((state: RootState, delta: number) => {
         particles.forEach(({ data }, type) => {

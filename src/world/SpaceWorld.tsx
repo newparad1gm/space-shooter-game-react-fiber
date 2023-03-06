@@ -124,7 +124,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         };
 
         setControlsLoaded(true);
-    }, [engine, laserData, addExplosion, setControlsLoaded]);
+    }, []);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -150,7 +150,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
                 engine.network.addActivity(testRock);
             }
             if (engine.activities.length === 1) {
-                const testRock1 = {"id":"47997f20-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A2 Create billing","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2983","time":1530457224498,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
+                const testRock1 = {"id":"47997f20-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A2 Create billing very long activity name, it is so long its very long","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2983","time":1530457224498,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
                 engine.addActivity(testRock1);
                 engine.network.addActivity(testRock1);
             }

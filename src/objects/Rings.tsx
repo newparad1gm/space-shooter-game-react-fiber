@@ -46,7 +46,7 @@ export const Ring = (props: RingProps) => {
 
     return (
         <group position={transition.position}>
-            <TextSprite text={transition.data.stage.name} position={[0, transition.scale.y + 3, 0]} scale={[80, 3, 1]} color={'#0000ff'} font={'50px Georgia'} />
+            <TextSprite text={transition.data.stage.name} position={[0, transition.scale.y + 3, 0]} scale={[80, 3, 1]} color={'#0000ff'} font={'200px Georgia'} />
             <mesh scale={transition.scale} geometry={geometry} material={material} />
             <mesh ref={mesh} scale={transition.scale} geometry={clearGeometry} material={clearMaterial} />
         </group>
