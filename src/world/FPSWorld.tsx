@@ -45,6 +45,15 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     const platforms = useRef<THREE.Group>(null);
 
     useEffect(() => {
+        engine.removeTransition = (transitionId: string) => {
+            if (transitionToPrevPlatform.has(transitionId)) {
+                const prevPlatform = transitionToPrevPlatform.get(transitionId)!;
+                prevPlatform.setOpening && prevPlatform.setOpening(true);
+            }
+        };
+    }, [engine, transitionToPrevPlatform]);
+
+    useEffect(() => {
         engine.start.set(0, 10, 0);
         console.log(`Setting engine.start in controls: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
         
@@ -73,13 +82,6 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
             lastTransition.setNextPlatform && lastTransition.setNextPlatform(platform);
             setTransitionToPrevPlatform(map => map.set(platform.guid, lastTransition));
             engine.setTransitions && engine.setTransitions(transitions => [...transitions, platform]);
-        };
-
-        engine.removeTransition = (transitionId: string) => {
-            if (transitionToPrevPlatform.has(transitionId)) {
-                const prevPlatform = transitionToPrevPlatform.get(transitionId)!;
-                prevPlatform.setOpening && prevPlatform.setOpening(true);
-            }
         };
 
         engine.shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
@@ -112,7 +114,6 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                             }
                         }
                     });
-
                 });
             }
         };
@@ -128,7 +129,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         }
 
         setControlsLoaded(true);
-    }, [engine, sparkData]);
+    }, [engine, sparkData, setTransitionToPrevPlatform]);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));

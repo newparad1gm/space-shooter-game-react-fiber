@@ -82,7 +82,7 @@ export const ShatteredTargets = (props: ShatteredTargetsProps): JSX.Element => {
 }
 
 const randomVector = () => {
-    return -0.5 + Math.random();
+    return -0.75 + Math.random() * 1.5;
 }
 
 interface ShatteredTargetProps {

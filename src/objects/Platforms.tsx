@@ -71,7 +71,7 @@ export const Platform = (props: PlatformProps) => {
                 return platform;
             });
         }
-    }, [transition.opening, engine.setCurrentTransition]);
+    }, [engine, transition.opening, engine.setCurrentTransition]);
 
     useEffect(() => {
         if (engine.currentTransition && engine.currentTransition.guid === transition.guid) {
@@ -94,7 +94,7 @@ export const Platform = (props: PlatformProps) => {
             engine.start.y += 10;
             console.log(`Setting engine.start: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
         }
-    }, [engine.currentTransition, engine.start, platform]);
+    }, [engine.currentTransition, engine.start, platform, transition]);
 
     useEffect(() => {
         engine.switches.set(transition.guid, setSwitchOn);
@@ -111,7 +111,7 @@ export const Platform = (props: PlatformProps) => {
         if (engine.currentTransition && engine.currentTransition.guid === transition.guid && targets.current) {
             engine.activityGroup = targets.current;
         }
-    }, [engine, engine.currentTransition, targets]);
+    }, [engine, engine.currentTransition, targets, transition]);
 
     useEffect(() => {
         if (switchOn && transition.nextPlatform) {
