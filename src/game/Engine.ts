@@ -34,6 +34,9 @@ export class Engine {
     transitionGroup: THREE.Group;
     switches: Map<string, React.Dispatch<React.SetStateAction<boolean>>>;
 
+    currentTransition?: WorldObject;
+    setCurrentTransition?: React.Dispatch<React.SetStateAction<WorldObject | undefined>>;
+
     object3DIdToWorldObjectId: Map<string, string>;
     idToObject: Map<string, WorldObject>;
 
@@ -123,7 +126,7 @@ export class Engine {
         // overwritten in JSX element
     }
 
-    removeTransition = (ringId: string) => {
+    removeTransition = (transitionId: string) => {
         // overwritten in JSX element
     }
 

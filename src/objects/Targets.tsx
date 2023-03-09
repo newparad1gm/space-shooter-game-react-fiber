@@ -22,7 +22,7 @@ export const Targets = (props: TargetsProps): JSX.Element => {
                     text={activity.data.activity.name} 
                     position={[activity.position.x, activity.position.y + (activity.scale.y / 2) + 0.35, activity.position.z]} 
                     rotation={[0, Math.PI, 0]}
-                    scale={[5, 0.5, 0.5]}
+                    scale={[10, 0.5, 0.5]}
                     color={'#ff0000'} 
                     font={'25px Georgia'} 
                 />)}

@@ -126,7 +126,7 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
         };
 
         setControlsLoaded(true);
-    });
+    }, [engine, laserData, addExplosion]);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));

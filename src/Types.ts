@@ -51,8 +51,8 @@ export type WorldObject = {
 export type Platform = WorldObject & {
     nextPlatform?: Platform;
     setNextPlatform?: React.Dispatch<React.SetStateAction<Platform | undefined>>; 
-    currentPlatform?: boolean;
-    setCurrentPlatform?: React.Dispatch<React.SetStateAction<boolean>>; 
+    opening?: boolean;
+    setOpening?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export type Stage = {

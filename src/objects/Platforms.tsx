@@ -43,7 +43,7 @@ export const Platform = (props: PlatformProps) => {
     const [ closed, setClosed ] = useState<boolean>(true);
     const [ doorYPos, setDoorYPos ] = useState<number>(4);
     const [ shattered, setShattered ] = useState<Explosion[]>([]);
-    [ transition.currentPlatform, transition.setCurrentPlatform ] = useState<boolean>(!!transition.currentPlatform);
+    [ transition.opening, transition.setOpening ] = useState<boolean>(false);
     [ transition.nextPlatform, transition.setNextPlatform ] = useState<PlatformType>();
 
     const mesh = useRef<THREE.Mesh>(null);
@@ -62,7 +62,19 @@ export const Platform = (props: PlatformProps) => {
     }, [setShattered, shatteredData]);
 
     useEffect(() => {
-        if (transition.currentPlatform) {
+        if (transition.opening && engine.setCurrentTransition) {
+            engine.setCurrentTransition(currPlatform => {
+                let platform = currPlatform as PlatformType;
+                while (platform.opening && platform.nextPlatform) {
+                    platform = platform.nextPlatform;
+                }
+                return platform;
+            });
+        }
+    }, [transition.opening, engine.setCurrentTransition]);
+
+    useEffect(() => {
+        if (engine.currentTransition && engine.currentTransition.guid === transition.guid) {
             engine.removeActivity = (activityId: string) => {
                 if (engine.idToObject.has(activityId)) {
                     const target = engine.idToObject.get(activityId)!;
@@ -74,14 +86,15 @@ export const Platform = (props: PlatformProps) => {
                 }
             };
         }
-    }, [engine, transition.currentPlatform, addShatter]);
+    }, [engine, engine.currentTransition, transition, addShatter]);
 
     useEffect(() => {
-        if (transition.currentPlatform && platform.current) {
+        if (engine.currentTransition && engine.currentTransition.guid === transition.guid && platform.current) {
             platform.current.getWorldPosition(engine.start);
             engine.start.y += 10;
+            console.log(`Setting engine.start: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
         }
-    }, [engine.start, platform, transition.currentPlatform]);
+    }, [engine.currentTransition, engine.start, platform]);
 
     useEffect(() => {
         engine.switches.set(transition.guid, setSwitchOn);
@@ -95,29 +108,28 @@ export const Platform = (props: PlatformProps) => {
     }, [mesh, meshIdToTransitionId, transition, transition.nextPlatform]);
 
     useEffect(() => {
-        if (transition.currentPlatform && targets.current) {
+        if (engine.currentTransition && engine.currentTransition.guid === transition.guid && targets.current) {
             engine.activityGroup = targets.current;
         }
-    }, [engine, targets, transition.currentPlatform]);
+    }, [engine, engine.currentTransition, targets]);
 
     useEffect(() => {
         if (switchOn && transition.nextPlatform) {
-            transition.nextPlatform.setCurrentPlatform && transition.nextPlatform.setCurrentPlatform(true);
-            transition.setCurrentPlatform && transition.setCurrentPlatform(false);
             engine.network.sendId(transition.nextPlatform.guid);
+            //engine.removeTransition(transition.nextPlatform.guid);
         }
     }, [engine.network, switchOn, transition]);
 
     useEffect(() => {
-        if (switchOn && platforms.current && doorYPos <= -5 && closed) {
+        if (transition.opening && platforms.current && doorYPos <= -5 && closed) {
             engine.resetOctree();
             engine.octree.fromGraphNode(platforms.current);
             setClosed(false);
         }
-    }, [closed, doorYPos, engine, switchOn, platforms]);
+    }, [closed, doorYPos, engine, transition.opening, platforms, switchOn]);
 
     useFrame((state: RootState, delta: number) => {
-        if (switchOn && doorYPos > -25) {
+        if (transition.opening && doorYPos > -25) {
             setDoorYPos(ypos => ypos - (4 * delta));
         }
     });
@@ -140,7 +152,7 @@ export const Platform = (props: PlatformProps) => {
                     mesh={mesh} 
                     switchOn={switchOn} 
                 />}
-                {transition.currentPlatform && <Targets group={targets} activities={engine.activities} meshIdToObjectId={engine.object3DIdToWorldObjectId} />}
+                {engine.currentTransition && engine.currentTransition.guid === transition.guid && <Targets group={targets} activities={engine.activities} meshIdToObjectId={engine.object3DIdToWorldObjectId} />}
                 <ShatteredTargets shattered={shattered} />
                 <mesh geometry={geometry} material={material} rotation={[Math.PI / 2, 0, 0]} />
             </group>}

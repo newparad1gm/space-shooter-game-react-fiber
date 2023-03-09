@@ -15,21 +15,6 @@ type SparkTimeout = Timeout & {
 export const FPSWorld = (props: WorldProps): JSX.Element => {
 	const { engine } = props;
 
-    [ engine.activities, engine.setActivities ] = useState<WorldObject[]>([]);
-    [ engine.transitions, engine.setTransitions ] = useState<Platform[]>([{
-        guid: '1',
-        data: { stage: { name: 'Start' } },
-        scale: new THREE.Vector3(1, 1, 1),
-        position: new THREE.Vector3(0, 0, 0),
-        currentPlatform: true
-    }]);
-    const [ sparks, setSparks ] = useState<Explosion[]>([]);
-    const [ loaded, setLoaded ] = useState<boolean>(false);
-    const [ controlsLoaded, setControlsLoaded ] = useState<boolean>(false);
-
-    const cameraGroup = useRef<THREE.Group>(null);
-    const platforms = useRef<THREE.Group>(null);
-
     const sparkData: SparkTimeout = useMemo(() => {
         const data = {
             count: 0,
@@ -41,9 +26,27 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         data.helper.visible = false;
         return data;
     }, []);
+    const startingPlatform: Platform = useMemo(() => { return {
+        guid: '1',
+        data: { stage: { name: 'Start' } },
+        scale: new THREE.Vector3(1, 1, 1),
+        position: new THREE.Vector3(0, 0, 0)
+    }; }, []);
+
+    [ engine.activities, engine.setActivities ] = useState<WorldObject[]>([]);
+    [ engine.transitions, engine.setTransitions ] = useState<Platform[]>([startingPlatform]);
+    [ engine.currentTransition, engine.setCurrentTransition ] = useState<Platform | undefined>(startingPlatform);
+    const [ transitionToPrevPlatform, setTransitionToPrevPlatform ] = useState<Map<string, Platform>>(new Map());
+    const [ sparks, setSparks ] = useState<Explosion[]>([]);
+    const [ loaded, setLoaded ] = useState<boolean>(false);
+    const [ controlsLoaded, setControlsLoaded ] = useState<boolean>(false);
+
+    const cameraGroup = useRef<THREE.Group>(null);
+    const platforms = useRef<THREE.Group>(null);
 
     useEffect(() => {
         engine.start.set(0, 10, 0);
+        console.log(`Setting engine.start in controls: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
         
         engine.addActivity = (activity: JsonResponse) => {
             const object: WorldObject = {
@@ -62,14 +65,21 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                 guid: transition.id,
                 data: transition,
                 scale: new THREE.Vector3(1, 1, 1),
-                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, transitionCount * 10),
-                currentPlatform: false
+                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, transitionCount * 10)
             }
             engine.idToObject.set(platform.guid, platform);
             engine.objectCount++;
             const lastTransition = engine.transitions[transitionCount - 1] as Platform;
             lastTransition.setNextPlatform && lastTransition.setNextPlatform(platform);
-            engine.setTransitions && engine.setTransitions([...engine.transitions, platform]);
+            setTransitionToPrevPlatform(map => map.set(platform.guid, lastTransition));
+            engine.setTransitions && engine.setTransitions(transitions => [...transitions, platform]);
+        };
+
+        engine.removeTransition = (transitionId: string) => {
+            if (transitionToPrevPlatform.has(transitionId)) {
+                const prevPlatform = transitionToPrevPlatform.get(transitionId)!;
+                prevPlatform.setOpening && prevPlatform.setOpening(true);
+            }
         };
 
         engine.shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
@@ -109,6 +119,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
 
         engine.teleportPlayerIfOob = (capsule: Capsule, height: number, radius: number, velocity: THREE.Vector3) => {
             if (capsule.end.y <= - 25) {
+                console.log(`Teleporting to engine.start: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
                 capsule.start.set(engine.start.x, engine.start.y, engine.start.z);
                 capsule.end.set(engine.start.x, engine.start.y + height, engine.start.z);
                 capsule.radius = radius;
@@ -117,7 +128,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         }
 
         setControlsLoaded(true);
-    });
+    }, [engine, sparkData]);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -137,7 +148,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
                 engine.network.addActivity(testTarget);
             }
             if (engine.activities.length === 1) {
-                const testTarget1 = {"id":"47997f20-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A2 Create billing","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2983","time":1530457224498,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
+                const testTarget1 = {"id":"47997f20-a8f1-11ed-b0e3-579384e6ae03","activity":{"name":"TT1A2 Create billing very long activity name, it is so long its very long","className":"CreateBilling","eventName":"CreateBilling","maxRetryAttempts":null,"retryIntervalSecs":null},"activityId":"63e5b6e7ff668aa80bfe2983","time":1530457224498,"workflow":{"id":"63e5b6e7ff668aa80bfe2980","name":"Policy"}};
                 engine.addActivity(testTarget1);
                 engine.network.addActivity(testTarget1);
             }
