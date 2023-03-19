@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RootState, useFrame } from '@react-three/fiber';
+import { RootState, useFrame, useLoader } from '@react-three/fiber';
 import { Engine } from '../game/Engine';
 import { Explosion, Platform as PlatformType, Timeout } from '../Types';
 import { Switch } from './Switch';
@@ -9,19 +9,36 @@ import { TextPlane } from './TextPlane';
 
 interface PlatformsProps {
     engine: Engine;
-    color: THREE.Color;
     group: React.RefObject<THREE.Group>;
 }
 
 export const Platforms = (props: PlatformsProps) => {
-    const { engine, color, group } = props;
+    const { engine, group } = props;
+    const grass = useLoader(THREE.TextureLoader, '/textures/grass.jpg');
+    const wood = useLoader(THREE.TextureLoader, '/textures/wood.jpg');
+
     const platformGeometry: THREE.BoxGeometry = useMemo(() => new THREE.BoxGeometry(20, 0.25, 8), []);
-    const platformMaterial: THREE.MeshStandardMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: color }), [color]);
+    const platformMaterial: THREE.MeshStandardMaterial = useMemo(() => {
+        grass.encoding = THREE.sRGBEncoding;
+        return new THREE.MeshStandardMaterial({ map: grass })
+    }, [grass]);
+    const doorMaterial: THREE.MeshStandardMaterial = useMemo(() => {
+        wood.encoding = THREE.sRGBEncoding;
+        return new THREE.MeshStandardMaterial({ map: wood })
+    }, [wood]);
 
     return (
         <group ref={group}>
             { engine.transitions.map(transition =>
-                <Platform key={transition.guid} engine={engine} platforms={group} transition={transition} geometry={platformGeometry} material={platformMaterial} meshIdToTransitionId={engine.object3DIdToWorldObjectId} />
+                <Platform key={transition.guid} 
+                    engine={engine} 
+                    platforms={group} 
+                    transition={transition} 
+                    geometry={platformGeometry} 
+                    platformMaterial={platformMaterial} 
+                    doorMaterial={doorMaterial} 
+                    meshIdToTransitionId={engine.object3DIdToWorldObjectId} 
+                />
             )}
         </group>
     )
@@ -32,12 +49,13 @@ interface PlatformProps {
     transition: PlatformType;
     platforms: React.RefObject<THREE.Group>;
     geometry: THREE.BoxGeometry;
-    material: THREE.MeshStandardMaterial;
+    platformMaterial: THREE.MeshStandardMaterial;
+    doorMaterial: THREE.MeshStandardMaterial;
     meshIdToTransitionId: Map<string, string>;
 }
 
 export const Platform = (props: PlatformProps) => {
-    const { engine, transition, platforms, geometry, material, meshIdToTransitionId } = props;
+    const { engine, transition, platforms, geometry, platformMaterial, doorMaterial, meshIdToTransitionId } = props;
 
     const [ switchOn, setSwitchOn ] = useState<boolean>(false);
     const [ closed, setClosed ] = useState<boolean>(true);
@@ -122,8 +140,7 @@ export const Platform = (props: PlatformProps) => {
 
     useEffect(() => {
         if (transition.opening && platforms.current && doorYPos <= -5 && closed) {
-            engine.resetOctree();
-            engine.octree.fromGraphNode(platforms.current);
+            engine.setOctreeFromGroup(platforms.current);
             setClosed(false);
         }
     }, [closed, doorYPos, engine, transition.opening, platforms, switchOn]);
@@ -137,10 +154,10 @@ export const Platform = (props: PlatformProps) => {
     return (
         <group position={transition.position} scale={transition.scale}>
             <group ref={platform}>
-                <mesh geometry={geometry} material={material} rotation={[0, 0, 0]} />
+                <mesh geometry={geometry} material={platformMaterial} rotation={[0, 0, 0]} />
             </group>
             {doorYPos > -25 && <group ref={door} position={[0, doorYPos, 4]}>
-                <TextPlane text={transition.data.stage.name} position={[0, 3, -0.2]} scale={[20, 2, 2]} rotation={[0, Math.PI, 0]} color={'#ff00ff'} font={'50px Georgia'} />
+                <TextPlane text={transition.data.stage.name} position={[0, 3, -0.2]} scale={[20, 2, 2]} rotation={[0, Math.PI, 0]} color={'#FCFF1F'} font={'50px Georgia'} />
                 {transition.nextPlatform && <Switch 
                     text={transition.nextPlatform.data.stage.name} 
                     position={[-8, -2.5, -0.2]} 
@@ -154,7 +171,7 @@ export const Platform = (props: PlatformProps) => {
                 />}
                 {engine.currentTransition && engine.currentTransition.guid === transition.guid && <Targets group={targets} activities={engine.activities} meshIdToObjectId={engine.object3DIdToWorldObjectId} />}
                 <ShatteredTargets shattered={shattered} />
-                <mesh geometry={geometry} material={material} rotation={[Math.PI / 2, 0, 0]} />
+                <mesh geometry={geometry} material={doorMaterial} rotation={[Math.PI / 2, 0, 0]} />
             </group>}
         </group>
     )

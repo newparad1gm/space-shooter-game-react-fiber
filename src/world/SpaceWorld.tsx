@@ -201,9 +201,8 @@ export const SpaceWorld = (props: WorldProps): JSX.Element => {
     });
 
     useEffect(() => {
-        engine.resetOctree();
         if (rocks.current && engine.activities.length) {
-            engine.octree.fromGraphNode(rocks.current);
+            engine.setOctreeFromGroup(rocks.current);
         }
         setLoaded(true);
     }, [engine, engine.activities, rocks, setLoaded]);

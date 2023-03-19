@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three';
 import { Capsule } from 'three/examples/jsm/math/Capsule';
-import { useLoader, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import { useCubeTexture } from '@react-three/drei';
 import { WorldProps } from './WorldLoader';
 import { Sparks } from '../objects/Sparks';
 import { Explosion, JsonResponse, Platform, Timeout, WorldObject } from '../Types';
@@ -14,6 +15,7 @@ type SparkTimeout = Timeout & {
 
 export const FPSWorld = (props: WorldProps): JSX.Element => {
 	const { engine } = props;
+	const skybox = useCubeTexture(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg'], { path: '/textures/skybox/' });
 
     const sparkData: SparkTimeout = useMemo(() => {
         const data = {
@@ -45,6 +47,11 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     const platforms = useRef<THREE.Group>(null);
 
     useEffect(() => {
+        skybox.encoding = THREE.sRGBEncoding;
+        engine.scene.background = skybox;
+    }, [engine, skybox]);
+
+    useEffect(() => {
         engine.removeTransition = (transitionId: string) => {
             if (transitionToPrevPlatform.has(transitionId)) {
                 const prevPlatform = transitionToPrevPlatform.get(transitionId)!;
@@ -55,8 +62,9 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
 
     useEffect(() => {
         engine.start.set(0, 10, 0);
-        console.log(`Setting engine.start in controls: ${engine.start.x} ${engine.start.y} ${engine.start.z}`);
-        
+    }, [engine]);
+
+    useEffect(() => {
         engine.addActivity = (activity: JsonResponse) => {
             const object: WorldObject = {
                 guid: activity.id,
@@ -174,9 +182,8 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     });
 
     useEffect(() => {
-        engine.resetOctree();
         if (platforms.current && engine.transitions.length > 0) {
-            engine.octree.fromGraphNode(platforms.current);
+            engine.setOctreeFromGroup(platforms.current);
             setLoaded(true);
         }
     }, [engine, engine.transitions, platforms]);
@@ -185,13 +192,11 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
 		<group {...props} dispose={null}>
             <fog attach="fog" args={['#070710', 100, 700]} />
             <ambientLight intensity={0.25} />
-            <Platforms group={platforms} engine={engine} color={new THREE.Color('blue')} />
+            <Platforms group={platforms} engine={engine} />
             <Sparks sparks={sparks} />
             <group ref={cameraGroup}>
-                <mesh position={[-500, 400, 1000]}>
-                    <sphereGeometry args={[10, 32, 32]} />
-                    <meshStandardMaterial emissive='yellow' emissiveIntensity={3} toneMapped={false} />
-                    <spotLight distance={6100} intensity={10} />
+                <mesh position={[-500, 300, -450]}>
+                    <spotLight distance={6100} intensity={1} />
                 </mesh>
             </group>
             <FPS engine={engine} start={engine.start} loaded={loaded} />

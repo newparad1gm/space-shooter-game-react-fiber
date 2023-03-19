@@ -47,7 +47,7 @@ export class Engine {
 
     start: THREE.Vector3;
 
-    octree!: Octree;
+    octree: Octree;
 
     constructor() {
         this.clock = new THREE.Clock(false);
@@ -75,10 +75,6 @@ export class Engine {
         this.workflows = [];
         
         this.start = new THREE.Vector3();
-        this.resetOctree();
-    }
-
-    resetOctree = () => {
         this.octree = new Octree();
     }
 
@@ -132,5 +128,23 @@ export class Engine {
 
     shoot = (position: THREE.Vector3, direction: THREE.Vector3, quaternion: THREE.Quaternion) => {
         // overwritten in JSX element
+    }
+
+    setOctreeFromGroup = (group: THREE.Group) => {
+        const octree= new Octree();
+        octree.fromGraphNode(group);
+        this.octree = octree;
+    }
+
+    collisions = (capsule: Capsule, velocity: THREE.Vector3) => {
+        const result = this.octree.capsuleIntersect(capsule);
+        this.onFloor = false;
+        if (result) {
+            this.onFloor = result.normal.y > 0;
+            if (!this.onFloor) {
+                velocity.addScaledVector(result.normal, -result.normal.dot(velocity));
+            }
+            capsule.translate(result.normal.multiplyScalar(result.depth));
+        }
     }
 }

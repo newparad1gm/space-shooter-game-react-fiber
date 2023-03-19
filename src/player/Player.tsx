@@ -38,26 +38,13 @@ export const Player = (props: PlayerProps) => {
             }
             velocity.addScaledVector(velocity, damping);
             const deltaPosition = velocity.clone().multiplyScalar(delta);
-            //group.position.add(deltaPosition);
             capsule.translate(deltaPosition);
             group.position.copy(capsule.end);
         }
     }, [capsule, engine.onFloor, gravity, velocity, loaded]);
 
-    const collisions = useCallback(() => {
-        const result = engine.octree.capsuleIntersect(capsule);
-        engine.onFloor = false;
-        if (result) {
-            engine.onFloor = result.normal.y > 0;
-            if (!engine.onFloor) {
-                velocity.addScaledVector(result.normal, -result.normal.dot(velocity));
-            }
-            capsule.translate(result.normal.multiplyScalar(result.depth));
-        }
-    }, [capsule, engine, velocity]);
-
     useFrame((state: RootState, delta: number) => {
-        collisions();
+        engine.collisions(capsule, velocity);
         engine.teleportPlayerIfOob(capsule, height, radius, velocity);
         player.current && player.current.getWorldPosition(engine.playerPosition);
         engine.setRay();
