@@ -46,20 +46,37 @@ export const Hud = (props: HudProps): JSX.Element => {
         </div>
     )
 }
+interface ControlsProps {
+    worldName: WorldName;
+}
 
-export const Controls = (): JSX.Element => {
+export const Controls = (props: ControlsProps): JSX.Element => {
+    const { worldName } = props;
     return (
         <div id='controls' className='transparent'>
             <div className='hudData'>
                 Controls<br/>
-                W - accelerate<br/>
-                S - brake<br/>
-                A - strafe left<br/>
-                D - strafe right<br/>
-                T - switch from first to third person<br/>
-                Mouse - look around and control direction<br/>
-                Mouse Button 1 - fire laser<br/>
-                I - enable/disable controls<br/>
+                {worldName === WorldName.Space && <div>
+                    W - accelerate<br/>
+                    S - brake<br/>
+                    A - strafe left<br/>
+                    D - strafe right<br/>
+                    T - switch from first to third person<br/>
+                    Mouse - look around and control direction<br/>
+                    Mouse Button 1 - fire laser<br/>
+                    I - show controls<br/>
+                </div>}
+                {worldName === WorldName.FPS && <div>
+                    W - forward<br/>
+                    S - backward<br/>
+                    A - strafe left<br/>
+                    D - strafe right<br/>
+                    E - use<br/>
+                    Space - jump<br/>
+                    Mouse - look around<br/>
+                    Mouse Button 1 - fire gun<br/>
+                    I - show controls<br/>
+                </div>}
             </div>
         </div>
     )

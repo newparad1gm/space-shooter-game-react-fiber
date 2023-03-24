@@ -38,7 +38,6 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     [ engine.activities, engine.setActivities ] = useState<WorldObject[]>([]);
     [ engine.transitions, engine.setTransitions ] = useState<Platform[]>([startingPlatform]);
     [ engine.currentTransition, engine.setCurrentTransition ] = useState<Platform | undefined>(startingPlatform);
-    const [ transitionToPrevPlatform, setTransitionToPrevPlatform ] = useState<Map<string, Platform>>(new Map());
     const [ sparks, setSparks ] = useState<Explosion[]>([]);
     const [ loaded, setLoaded ] = useState<boolean>(false);
     const [ controlsLoaded, setControlsLoaded ] = useState<boolean>(false);
@@ -52,16 +51,13 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     }, [engine, skybox]);
 
     useEffect(() => {
+        engine.start.set(0, 10, 0);
         engine.removeTransition = (transitionId: string) => {
-            if (transitionToPrevPlatform.has(transitionId)) {
-                const prevPlatform = transitionToPrevPlatform.get(transitionId)!;
-                prevPlatform.setOpening && prevPlatform.setOpening(true);
+            if (engine.idToObject.has(transitionId)) {
+                const platform = engine.idToObject.get(transitionId) as Platform;
+                platform.prevPlatform && platform.prevPlatform.setOpening && platform.prevPlatform.setOpening(true);
             }
         };
-    }, [engine, transitionToPrevPlatform]);
-
-    useEffect(() => {
-        engine.start.set(0, 10, 0);
     }, [engine]);
 
     useEffect(() => {
@@ -77,18 +73,17 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         };
 
         engine.addTransition = (transition: JsonResponse) => {
-            const transitionCount = engine.transitions.length;
+            engine.objectCount++;
             const platform: Platform = {
                 guid: transition.id,
                 data: transition,
                 scale: new THREE.Vector3(1, 1, 1),
-                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, transitionCount * 10)
+                position: new THREE.Vector3(0, (-1 + Math.random() * 2) * 2, engine.objectCount * 10)
             }
             engine.idToObject.set(platform.guid, platform);
-            engine.objectCount++;
-            const lastTransition = engine.transitions[transitionCount - 1] as Platform;
+            const lastTransition = engine.transitions[engine.transitions.length - 1] as Platform;
             lastTransition.setNextPlatform && lastTransition.setNextPlatform(platform);
-            setTransitionToPrevPlatform(map => map.set(platform.guid, lastTransition));
+            platform.prevPlatform = lastTransition;
             engine.setTransitions && engine.setTransitions(transitions => [...transitions, platform]);
         };
 
@@ -137,7 +132,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
         }
 
         setControlsLoaded(true);
-    }, [engine, sparkData, setTransitionToPrevPlatform]);
+    }, [engine, sparkData]);
 
     useEffect(() => {
         engine.renderer.setClearColor(new THREE.Color('#020209'));
@@ -182,7 +177,7 @@ export const FPSWorld = (props: WorldProps): JSX.Element => {
     });
 
     useEffect(() => {
-        if (platforms.current && engine.transitions.length > 0) {
+        if (platforms.current && engine.transitions.length) {
             engine.setOctreeFromGroup(platforms.current);
             setLoaded(true);
         }

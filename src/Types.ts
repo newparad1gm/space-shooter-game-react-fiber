@@ -49,6 +49,7 @@ export type WorldObject = {
 }
 
 export type Platform = WorldObject & {
+    prevPlatform?: Platform;
     nextPlatform?: Platform;
     setNextPlatform?: React.Dispatch<React.SetStateAction<Platform | undefined>>; 
     opening?: boolean;

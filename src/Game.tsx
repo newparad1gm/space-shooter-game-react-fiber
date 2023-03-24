@@ -73,7 +73,7 @@ export const Game = (): JSX.Element => {
                 </EffectComposer>
                 <Stats />
             </Canvas> }
-            { gameStarted && controls && <Controls /> }
+            { gameStarted && controls && <Controls worldName={worldName} /> }
             { gameStarted && <Hud engine={engine} /> }
             { !gameStarted && <GameStartOptions worldName={worldName} setWorldName={setWorldName} setGameStarted={setGameStarted} network={engine.network} /> }
         </div>

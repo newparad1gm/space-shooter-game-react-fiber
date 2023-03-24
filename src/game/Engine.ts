@@ -36,6 +36,8 @@ export class Engine {
 
     currentTransition?: WorldObject;
     setCurrentTransition?: React.Dispatch<React.SetStateAction<WorldObject | undefined>>;
+    transitionCount?: number;
+    setTransitionCount?: React.Dispatch<React.SetStateAction<number>>;
 
     object3DIdToWorldObjectId: Map<string, string>;
     idToObject: Map<string, WorldObject>;
@@ -131,9 +133,13 @@ export class Engine {
     }
 
     setOctreeFromGroup = (group: THREE.Group) => {
-        const octree= new Octree();
+        const octree = new Octree();
         octree.fromGraphNode(group);
         this.octree = octree;
+    }
+
+    resetOctree = () => {
+        this.octree = new Octree();
     }
 
     collisions = (capsule: Capsule, velocity: THREE.Vector3) => {
