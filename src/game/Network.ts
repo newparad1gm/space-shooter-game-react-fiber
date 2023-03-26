@@ -17,14 +17,16 @@ export class Network {
         this.workflows = new Map();
     }
 
-    setupClient = (setGameStarted: React.Dispatch<React.SetStateAction<boolean>>) => {
+    setupClient = (setGameStarted: React.Dispatch<React.SetStateAction<boolean>>, workflowNamesStr: string | null, included?: boolean) => {
         if (this.client) {
             this.client.onopen = () => {
                 if (this.client) {
                     setGameStarted(true);
                     const timeoutMs = this.timeout * 1000 || 20000;
                     this.client.send(JSON.stringify({
-                        timeout: timeoutMs
+                        timeout: timeoutMs,
+                        included: included,
+                        workflowNames: workflowNamesStr,
                     }));
                     console.log('Connected');
                 }

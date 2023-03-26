@@ -91,8 +91,12 @@ interface GameStartOptionsProps {
 
 export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
     const { worldName, setWorldName, setGameStarted, network } = props;
+
     const webSocketUrl = useRef<HTMLInputElement>(null);
     const timeout = useRef<HTMLInputElement>(null);
+    const workflows = useRef<HTMLInputElement>(null);
+
+    const [ included, setIncluded ] = useState<boolean>(false);
 
     const startGame = useCallback(() => {
         if (webSocketUrl.current && timeout.current && webSocketUrl.current.value) {
@@ -103,22 +107,25 @@ export const GameStartOptions = (props: GameStartOptionsProps): JSX.Element => {
 
     useEffect(() => {
         if (network.client) {
-            network.setupClient(setGameStarted);
+            network.setupClient(setGameStarted, workflows.current && workflows.current.value, included);
         }
-    }, [network, network.client, setGameStarted]);
+    }, [included, network, network.client, setGameStarted, workflows]);
 
     return (
         <div>
-            Select World<br/>
-            <select value={worldName} onChange={e => setWorldName(WorldName[e.target.value as keyof typeof WorldName])}>
-                { Utils.getEnumKeys(WorldName).map((key, i) => (
-                    <option key={i} value={WorldName[key]}>
-                        {key}
-                    </option>
-                )) }
-            </select>
+            <div>
+                Select World: 
+                <select value={worldName} onChange={e => setWorldName(WorldName[e.target.value as keyof typeof WorldName])}>
+                    { Utils.getEnumKeys(WorldName).map((key, i) => (
+                        <option key={i} value={WorldName[key]}>
+                            {key}
+                        </option>
+                    )) }
+                </select>
+            </div>
             <div>WebSocket: <input type='text' ref={webSocketUrl} defaultValue={process.env.REACT_APP_WEBSOCKET_CONNECTION || window.location.origin.replace(/^http/, 'ws')} /></div>
             <div>Timeout (in seconds): <input type='number' min='5' max='60' ref={timeout} defaultValue={20} /></div>
+            <div>Workflows Included: <input type='checkbox' onChange={e => setIncluded(e.target.checked)} />  (comma delimited list of names): <input type='text' ref={workflows} /></div>
             <button onClick={startGame}>
                 Click to start
             </button>
