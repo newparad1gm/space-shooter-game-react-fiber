@@ -15,8 +15,8 @@ export const Game = (): JSX.Element => {
     const engine = useMemo(() => new Engine(), []);
     [ engine.network.client, engine.network.setClient ] = useState<WebSocket>();
     [ engine.transitions, engine.setTransitions ] = useState<WorldObject[]>([]);
-    const [ gameStarted, setGameStarted ] = useState<boolean>(false);
-    const [ worldName, setWorldName ] = useState<WorldName>(WorldName.Space);
+    const [ gameStarted, setGameStarted ] = useState<boolean>(true);
+    const [ worldName, setWorldName ] = useState<WorldName>(WorldName.FPS);
     const [ controls, setControls ] = useState<boolean>(true);
 
     const onWindowResize = useCallback(() => {

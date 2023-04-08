@@ -1,4 +1,4 @@
-import React, { createRef, useRef, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { RootState, useFrame } from '@react-three/fiber';
 import { Explosion as ExplosionType } from '../Types';

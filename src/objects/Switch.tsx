@@ -25,7 +25,7 @@ export const Switch = (props: SwitchProps) => {
         if (material.current) {
             material.current.color = switchOn ? green : red;
         }
-    }, [switchOn]);
+    }, [green, red, switchOn]);
 
     return (
         <group ref={group} position={position} scale={scale} rotation={rotation}>

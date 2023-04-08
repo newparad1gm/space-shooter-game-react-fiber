@@ -36,7 +36,7 @@ export const FPS = (props: FPSProps) => {
             playerDirection.negate();
             engine.shoot(player.current.getWorldPosition(new THREE.Vector3()), playerDirection.clone(), engine.camera.getWorldQuaternion(new THREE.Quaternion()));
         }
-    }, [engine, player, playerDirection]);
+    }, [engine, player, playerDirection, shootingData]);
 
     const handleMouseMove = useCallback((event: MouseEvent) => {
         if (document.pointerLockElement === document.body && player.current) {
@@ -124,7 +124,7 @@ export const FPS = (props: FPSProps) => {
             height={1} 
             loaded={loaded}
         >
-            <Gun group={gun} engine={engine} shooting={shooting} />
+            <Gun group={gun} shooting={shooting} />
         </Player>
 	);
 }

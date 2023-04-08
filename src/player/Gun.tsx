@@ -6,17 +6,15 @@ Command: npx gltfjsx@6.1.4 gun.glb -t
 import * as THREE from 'three';
 import React, { useMemo, useRef } from 'react';
 import { Euler, Vector3 } from '@react-three/fiber';
-import { Engine } from '../game/Engine';
 import { Scar } from '../objects/Scar';
 
 interface GunProps {
-	engine: Engine
 	group: React.RefObject<THREE.Group>;
 	shooting: boolean;
 }
 
 export function Gun(props: GunProps) {
-	const { engine, group, shooting } = props;
+	const { group, shooting } = props;
     const gun = useRef<THREE.Group>(null);
 
 	return (
@@ -45,7 +43,7 @@ export function MuzzleFlash(props: MuzzleProps) {
 
 		return new THREE.ShapeGeometry(square);
 	}, []);
-	const material: THREE.MeshStandardMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: yellow, emissive: yellow, emissiveIntensity: 10, toneMapped: false, opacity: 0.5, transparent: true, side: THREE.DoubleSide }), []);
+	const material: THREE.MeshStandardMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: yellow, emissive: yellow, emissiveIntensity: 10, toneMapped: false, opacity: 0.5, transparent: true, side: THREE.DoubleSide }), [yellow]);
 
 	return (
 		<group position={position} rotation={rotation} scale={scale}>
