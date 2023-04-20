@@ -39,6 +39,9 @@ export class Engine {
     transitionCount?: number;
     setTransitionCount?: React.Dispatch<React.SetStateAction<number>>;
 
+    requirements: string[];
+    setRequirements?: React.Dispatch<React.SetStateAction<string[]>>;
+
     object3DIdToWorldObjectId: Map<string, string>;
     idToObject: Map<string, WorldObject>;
 
@@ -71,6 +74,7 @@ export class Engine {
         this.transitionGroup = new THREE.Group();
         this.transitions = [];
         this.switches = new Map();
+        this.requirements = [];
 
         this.raycaster = new THREE.Raycaster();
         this.network = new Network(this);

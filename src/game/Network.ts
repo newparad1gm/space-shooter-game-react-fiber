@@ -104,6 +104,7 @@ export class Network {
                 this.engine.setWorkflows && this.engine.setWorkflows(Array.from(this.workflows.values()));
             }
         }
+        this.engine.setRequirements && this.engine.setRequirements(reqs => [...reqs, ...requirements.requirements]);
     }
 
     sendId = (guid: string) => {

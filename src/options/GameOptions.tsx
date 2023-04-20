@@ -13,9 +13,11 @@ export const Hud = (props: HudProps): JSX.Element => {
     const { engine } = props;
     [ engine.currentActivity, engine.setCurrentActivity ] = useState<WorldObject>();
     [ engine.workflows, engine.setWorkflows ] = useState<Workflow[]>([]);
+    [ engine.requirements, engine.setRequirements ] = useState<string[]>([]);
     const workflowsPre = useRef<HTMLPreElement>(null);
     const rockPre = useRef<HTMLPreElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const bottomReqRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (rockPre.current) {
@@ -30,17 +32,28 @@ export const Hud = (props: HudProps): JSX.Element => {
         bottomRef.current && bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }, [workflowsPre, engine.workflows]);
 
+    useEffect(() => {
+        bottomReqRef.current && bottomReqRef.current.scrollIntoView({ behavior: 'smooth' });
+    }, [engine.requirements]);
+
     return (
         <div id='hud'>
+            Workflows:
             <div className={'hudData workflowData'}>
-                Workflows:
                 <div>
                     <pre ref={workflowsPre} />
                 </div>
                 <div ref={bottomRef} />
             </div>
+            Requirements:
+            <div className={'hudData requirements'}>
+                { engine.requirements.map(req => (
+                    <div>{ req }</div>
+                ))}
+                <div ref={bottomReqRef} />
+            </div>
+            Activity:
             <div className='hudData'>
-                Activity:
                 <pre ref={rockPre} />
             </div>
         </div>
